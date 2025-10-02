@@ -95,7 +95,7 @@ static StackElem_t calc_sqrt(StackElem_t value) {
         return -1;
     }
 
-    StackElem_t l = 0, r = value;
+    StackElem_t l = 0, r = value + 1;
 
     while (r - l > 1) {
         StackElem_t m = (l + r) / 2;
