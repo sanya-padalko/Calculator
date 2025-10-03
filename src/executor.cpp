@@ -1,57 +1,58 @@
 #include "executor.h"
 
 StackErr_t execution(const char* exec_file) {
-    FILE* ex_file = fopen(exec_file, "r");
+    Text code = {};
+    code.name = exec_file;
 
-    if (!ex_file) {
-        printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, exec_file);
-        return FILE_ERR;
-    }
+    read_parse(&code);
 
-    make_stack(stack, 0);
+    make_stack(stack, 1);
 
-    int operation = 0;
+    StackOper operation = VOID;
 
-    while (fscanf(ex_file, "%d", &operation) == 1) {
-        int value = 0;
+    for (size_t command_ind = 0; command_ind < code.n_commands; ++command_ind) {
+        sscanf(code.mas_command[command_ind], "%d", &operation);
+        StackElem_t value = 0;
         StackErr_t error_code = NOTHING;
-
+        char* buf = code.mas_command[command_ind];
+        
         switch(operation) {
-            case 1:
-                fscanf(ex_file, "%d", &value);
+            case PUSH:
+                while (*buf++ != ' ');
+                sscanf(buf, "%d", &value);
+
                 error_code = StackPush(stack, value);
                 break;
-            case 2:
+            case ADD:
                 error_code = StackAdd(stack);
                 break;
-            case 3:
+            case SUB:
                 error_code = StackSub(stack);
                 break;
-            case 4:
+            case MUL:
                 error_code = StackMul(stack);
                 break;
-            case 5:
+            case DIV:
                 error_code = StackDiv(stack);
                 break;
-            case 6:
+            case SQRT:
                 error_code = StackSqrt(stack);
                 break;
-            case 7:
+            case POW:
                 error_code = StackPow(stack);
                 break;
-            case 8:
+            case OUT:
                 error_code = StackOut(stack);
                 break;
-            case 9:
+            case HLT:
                 return NOTHING;
                 break;
         }
 
         if (error_code != NOTHING) {
-            ParseErr(error_code);
             return error_code;
         }
     }
 
-    fclose(ex_file);
+    return NOTHING;
 }
