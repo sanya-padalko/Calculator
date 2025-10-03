@@ -21,48 +21,55 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
     bool is_end = false;
 
     while (fscanf(start, "%s", &operation) == 1) {
-        if (!strcmp(&operation[0], "PUSH")) {
-            StackElem_t value = 0;
-
-            int correct = fscanf(start, "%d", &value);
-            if (correct != 1) {
-                printerr(RED_COLOR "PUSH must have 1 argument\n" RESET_COLOR);
-                error_code = VALUE_ERR;
+        int operation_code = 0;
+        for (int c = 0; c < 4; ++c)
+            operation_code = (operation_code << 1) + operation[c];
+        
+        StackElem_t value = 0;
+        int correct = 0;
+        
+        switch (operation_code) {
+            case PUSH_CODE:
+                correct = fscanf(start, "%d", &value);
+                if (correct != 1) {
+                    printerr(RED_COLOR "PUSH must have 1 argument\n" RESET_COLOR);
+                    error_code = VALUE_ERR;
+                    break;
+                }
+                fprintf(ex_file, "%d %d\n", PUSH, value);
                 break;
-            }
-            fprintf(ex_file, "1 %d\n", value);  // magic number
+            case ADD_CODE:
+                fprintf(ex_file, "%d\n", ADD);
+                break;
+            case SUB_CODE:
+                fprintf(ex_file, "%d\n", SUB);
+                break;
+            case MUL_CODE:
+                fprintf(ex_file, "%d\n", MUL);
+                break;
+            case DIV_CODE:
+                fprintf(ex_file, "%d\n", DIV);
+                break;
+            case SQRT_CODE:
+                fprintf(ex_file, "%d\n", SQRT);
+                break;
+            case POW_CODE:
+                fprintf(ex_file, "%d\n", POW);
+                break;
+            case OUT_CODE:
+                fprintf(ex_file, "%d\n", OUT);
+                break;
+            case HLT_CODE:
+                fprintf(ex_file, "%d\n", HLT);
+                is_end = true;
+                break;
+            default:
+                printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
+                error_code = OPERATION_ERR;
         }
-        else if (!strcmp(&operation[0], "ADD")) {
-            fprintf(ex_file, "2\n");
-        }
-        else if (!strcmp(&operation[0], "SUB")) {
-            fprintf(ex_file, "3\n");
-        }
-        else if (!strcmp(&operation[0], "MUL")) {
-            fprintf(ex_file, "4\n");
-        }
-        else if (!strcmp(&operation[0], "DIV")) {
-            fprintf(ex_file, "5\n");
-        }
-        else if (!strcmp(&operation[0], "SQRT")) {
-            fprintf(ex_file, "6\n");
-        }
-        else if (!strcmp(&operation[0], "POW")) {
-            fprintf(ex_file, "7\n");
-        }
-        else if (!strcmp(&operation[0], "OUT")) {
-            fprintf(ex_file, "8\n");
-        }
-        else if (!strcmp(&operation[0], "HLT")) {
-            fprintf(ex_file, "9\n");
-            is_end = true;
+
+        if (is_end)
             break;
-        }
-        else {
-            printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
-            error_code = OPERATION_ERR;
-            break;
-        }
     }
 
     if (!is_end) {
