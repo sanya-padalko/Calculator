@@ -5,7 +5,7 @@ StackErr_t StackAdd(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size < 4) {
+    if (stack->size < 2) {
         printerr(RED_COLOR "Not enough numbers for addition\n" RESET_COLOR);
         return SIZE_ERR;
     }
@@ -26,7 +26,7 @@ StackErr_t StackSub(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size < 4) {
+    if (stack->size < 2) {
         printerr(RED_COLOR "Not enough numbers for subtraction\n" RESET_COLOR);
         return SIZE_ERR;
     }
@@ -47,7 +47,7 @@ StackErr_t StackMul(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size < 4) {
+    if (stack->size < 2) {
         printerr(RED_COLOR "Not enough numbers for multiplication\n" RESET_COLOR);
         return SIZE_ERR;
     }
@@ -68,7 +68,7 @@ StackErr_t StackDiv(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size < 4) {
+    if (stack->size < 2) {
         printerr(RED_COLOR "Not enough numbers for division\n" RESET_COLOR);
         return SIZE_ERR;
     }
@@ -114,7 +114,7 @@ StackErr_t StackSqrt(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size == 2) {
+    if (stack->size == 0) {
         ParseErr(EMPTY_STACK);
         return EMPTY_STACK;
     }
@@ -150,7 +150,7 @@ StackErr_t StackPow(stack_t *stack) {
     if (code_error != NOTHING)
         return code_error;
 
-    if (stack->size < 4) {
+    if (stack->size < 2) {
         printerr(RED_COLOR "Not enough numbers for exponentiation\n" RESET_COLOR);
         return SIZE_ERR;
     }
@@ -176,7 +176,7 @@ StackErr_t StackOut(stack_t *stack) {
     if (code_error)
         return code_error;
 
-    if (stack->size < 3) {
+    if (stack->size < 1) {
         ParseErr(EMPTY_STACK);
         return EMPTY_STACK;
     }
