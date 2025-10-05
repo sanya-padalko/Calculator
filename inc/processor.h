@@ -15,6 +15,8 @@ struct processor_t {
 
     int cmd_ind = 0;
 
+    int cmd_cnt = 0;
+
     StackElem_t regs[6] = {0};
 };
 
@@ -24,12 +26,16 @@ struct processor_t {
 #define make_processor(code_file) ProcCtor(code_file)
 #endif
 
+const int err_regs_ind = 4;
+
 enum ProcessorErr_t {
     NO_ERR      = 0,
     STACK_ERR   = 1,
     CODE_ERR    = 2,
     NULL_ERR    = 3,
-    CMD_IND_ERR = 4
+    CMD_IND_ERR = 4,
+    INPUT_ERR   = 5,
+    REG_IND_ERR = 6,
 };
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
