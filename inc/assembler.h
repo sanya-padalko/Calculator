@@ -7,16 +7,20 @@
 #include "calculator.h"
 #include "processor.h"
 
-enum OperCode {
-    PUSH_CODE = 1218,
-    ADD_CODE  =  928,
-    SUB_CODE  = 1136,
-    MUL_CODE  = 1108,
-    DIV_CODE  = 1008,
-    SQRT_CODE = 1236,
-    POW_CODE =  1130,
-    OUT_CODE =  1140,
-    HLT_CODE =  1048,
+enum OperCode { 
+    PUSH_CODE  = 588,
+    ADD_CODE   = 353,
+    SUB_CODE   = 462,
+    MUL_CODE   = 786,
+    DIV_CODE   =  63,
+    SQRT_CODE  = 470,
+    POW_CODE   = 146,
+    OUT_CODE   = 260,
+    TOP_CODE   = 207,
+    IN_CODE    = 319,
+    PUSHR_CODE = 670,
+    POPR_CODE  =  29,
+    HLT_CODE   = 560,
 };
 
 StackErr_t assembler(const char* text_file, const char* commands_file);

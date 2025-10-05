@@ -13,7 +13,7 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
         return FILE_ERR;
     }
 
-    char operation[5] = {};
+    char operation[6] = {}; // константа
 
     StackErr_t error_code = NOTHING;
 
@@ -21,21 +21,48 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
 
     while (fscanf(start, "%s", &operation) == 1) {
         int operation_code = 0;
-        for (int c = 0; c < 4; ++c)
-            operation_code = (operation_code << 1) + operation[c];
-        
+        for (int c = 0; c < 5; ++c) { // константа
+            operation_code = ((operation_code * 13) + operation[c]) % 1000; // в функцию, можно % 1000
+            operation[c] = 0;
+        }
+
         StackElem_t value = 0;
         int correct = 0;
+        char reg_type;
         
         switch (operation_code) {
             case PUSH_CODE:
                 correct = fscanf(start, "%d", &value);
                 if (correct != 1) {
                     printerr(RED_COLOR "PUSH must have 1 argument\n" RESET_COLOR);
-                    error_code = VALUE_ERR;
-                    break;
+                    fclose(start);
+                    fclose(ex_file);
+                    return VALUE_ERR;
                 }
+
                 fprintf(ex_file, "%d %d\n", PUSH, value);
+                break;
+            case PUSHR_CODE:
+                correct = fscanf(start, " %c", &reg_type);
+                if (correct != 1) {
+                    printerr(RED_COLOR "PUSHR must have 1 argument\n" RESET_COLOR);
+                    fclose(start);
+                    fclose(ex_file);
+                    return VALUE_ERR;
+                }
+
+                fprintf(ex_file, "%d %d\n", PUSHR, (reg_type - 'A'));
+                break;
+            case POPR_CODE:
+                correct = fscanf(start, " %c", &reg_type);
+                if (correct != 1) {
+                    printerr(RED_COLOR "POPR must have 1 argument\n" RESET_COLOR);
+                    fclose(start);
+                    fclose(ex_file);
+                    return VALUE_ERR;
+                }
+
+                fprintf(ex_file, "%d %d\n", POPR, (reg_type - 'A'));
                 break;
             case ADD_CODE:
                 fprintf(ex_file, "%d\n", ADD);
@@ -58,13 +85,21 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
             case OUT_CODE:
                 fprintf(ex_file, "%d\n", OUT);
                 break;
+            case IN_CODE:
+                fprintf(ex_file, "%d\n", IN);
+                break;
+            case TOP_CODE:
+                fprintf(ex_file, "%d\n", TOP);
+                break;
             case HLT_CODE:
                 fprintf(ex_file, "%d\n", HLT);
                 is_end = true;
                 break;
             default:
                 printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
-                error_code = OPERATION_ERR;
+                fclose(start);
+                fclose(ex_file);
+                return OPERATION_ERR;
         }
 
         if (is_end)
