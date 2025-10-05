@@ -18,11 +18,7 @@ struct Text {
     char** mas_command = 0;
 };
 
-#ifdef DEBUG
-#define make_text(file_name) TextCtor(file_name, VarInfoCtor("text", __FILE__, __FUNCTION__, __LINE__))
-#else
 #define make_text(file_name) TextCtor(file_name)
-#endif
 
 Text* TextCtor(const char* file_name);
 
