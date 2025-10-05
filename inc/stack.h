@@ -23,12 +23,10 @@ const StackElem_t CANARY_LEFT  = 52954; // CEDA
 const StackElem_t CANARY_RIGHT = 65242; // FEDA
 
 #ifdef DEBUG
-#define make_stack(name, capacity) \
-        stack_t* name = StackCtor(capacity, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__));
+#define make_stack(capacity) StackCtor(capacity, VarInfoCtor("stack", __FILE__, __FUNCTION__, __LINE__))
 #define ON_DEBUG(...) __VA_ARGS__
 #else
-#define make_stack(name, capacity) \
-        stack_t* name = StackCtor(capacity);
+#define make_stack(capacity) StackCtor(capacity)
 #define ON_DEBUG(...)
 #endif
 
@@ -49,6 +47,8 @@ const int ExpandMn =  2;
 const int CheckMn  =  4;
 const int NarrowMn =  3;
 const int BadSize  = -1;
+
+const int BaseStackSize = 1;
 
 unsigned long calc_hash(stack_t *stack);
 

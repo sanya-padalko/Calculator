@@ -5,6 +5,7 @@
 
 #include "stack.h"
 #include "calculator.h"
+#include "processor.h"
 
 enum OperCode {
     PUSH_CODE = 1218,

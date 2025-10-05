@@ -1,5 +1,20 @@
 #include "text_utils.h"
 
+Text* TextCtor(const char* file_name) {
+    Text* text = (Text*)calloc(1, sizeof(Text));
+
+    if (text == NULL) {
+        printerr(RED_COLOR "Calloc return NULL in TextCtor\n" RESET_COLOR);
+        return NULL;
+    }
+
+    text->name = file_name;
+    
+    read_parse(text);
+
+    return text;
+}
+
 int get_file_size(const char* file_name) {
     struct stat file_stat; 
     int stat_result = stat(file_name, &file_stat);

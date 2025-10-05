@@ -1,0 +1,43 @@
+#ifndef __EXECUTOR_H_
+#define __EXECUTOR_H_
+
+#include <sys/stat.h>
+
+#include "stack.h"
+#include "calculator.h"
+#include "text_utils.h"
+#include "vars.h"
+
+struct processor_t {
+    stack_t *stack = NULL;
+
+    Text *code = NULL;
+
+    int cmd_ind = 0;
+
+    StackElem_t regs[6] = {0};
+};
+
+#ifdef DEBUG
+#define make_processor(code_file) ProcCtor(code_file, VarInfoCtor("processor", __FILE__, __FUNCTION__, __LINE__))
+#else
+#define make_processor(code_file) ProcCtor(code_file)
+#endif
+
+enum ProcessorErr_t {
+    NO_ERR      = 0,
+    STACK_ERR   = 1,
+    CODE_ERR    = 2,
+    NULL_ERR    = 3,
+    CMD_IND_ERR = 4
+};
+
+processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
+
+ProcessorErr_t ProcDtor(processor_t* proc);
+
+ProcessorErr_t ProcVerify(processor_t* proc);
+
+ProcessorErr_t execution(const char* exec_file);
+
+#endif

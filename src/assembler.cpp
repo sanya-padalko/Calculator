@@ -2,13 +2,12 @@
 
 StackErr_t assembler(const char* text_file, const char* commands_file) {
     FILE* start = fopen(text_file, "r");
-    FILE* ex_file = fopen(commands_file, "w");
-
     if (!start) {
         printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, commands_file);
         return FILE_ERR;
     }
 
+    FILE* ex_file = fopen(commands_file, "w");
     if (!ex_file) {
         printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, text_file);
         return FILE_ERR;
