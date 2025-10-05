@@ -8,13 +8,17 @@
 #include "vars.h"
 #include "calculator.h"
 #include "assembler.h"
-#include "executor.h"
+#include "processor.h"
 
 int main() {
     const char* start = "../start.txt";
     const char* ex_file = "../ex_file.txt";
     
-    assembler(start, ex_file);
+    StackErr_t error_code = assembler(start, ex_file);
+
+    if (error_code != NOTHING) {
+        return 0;
+    }
 
     execution(ex_file);
 }
