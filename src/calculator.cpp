@@ -158,8 +158,8 @@ StackErr_t StackPow(stack_t *stack) {
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
 
-    if (b < 0) {
-        printerr(RED_COLOR "You can't raising a negative number to a power" RESET_COLOR);
+    if (a < 0) {
+        printerr(RED_COLOR "You can't raising number in negative power\n" RESET_COLOR);
         return VALUE_ERR;
     }
 
@@ -181,7 +181,7 @@ StackErr_t StackOut(stack_t *stack) {
         return EMPTY_STACK;
     }
 
-    int a = StackPop(stack);
+    StackElem_t a = StackPop(stack);
 
     if (a == POIZON_VALUE) {
         printerr(RED_COLOR "Something in Outputing went wrong\n" RESET_COLOR);
@@ -193,3 +193,38 @@ StackErr_t StackOut(stack_t *stack) {
     return NOTHING;
 }
 
+StackErr_t StackTop(stack_t *stack) {
+    stackverify(stack);
+    if (code_error)
+        return code_error;
+
+    if (stack->size < 1) {
+        ParseErr(EMPTY_STACK);
+        return EMPTY_STACK;
+    }
+
+    StackElem_t a = stack->data[stack->size - 1];
+
+    return NOTHING;
+}
+
+StackErr_t StackIn(stack_t *stack) {
+    stackverify(stack);
+    if (code_error) 
+        return code_error;
+
+    StackElem_t value = 0;
+    int scanf_check = scanf("%d", &value);
+
+    if (scanf_check != 1) {
+        printerr(RED_COLOR "Incorrect number input\n" RESET_COLOR);
+        return VALUE_ERR;
+    }
+
+    StackErr_t error_code = StackPush(stack, value);
+
+    if (error_code != NOTHING)
+        printerr(RED_COLOR "Input was not completed\n" RESET_COLOR);
+
+    return error_code;
+}
