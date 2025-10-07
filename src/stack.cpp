@@ -151,7 +151,7 @@ StackErr_t StackVerify(stack_t* stack) {
 
 void StackDump(stack_t* stack, VarInfo varinfo) {
     printerr("\nStackDump called from %s: in function %s, line %d\n", varinfo.file_name, varinfo.func_name, varinfo.line_ind);
-    printerr("%s ", varinfo.stack_name);
+    printerr("%s ", varinfo.object_name);
 
     printerr("[");
     if (stack == NULL) {
