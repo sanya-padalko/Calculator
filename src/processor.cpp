@@ -1,5 +1,26 @@
 #include "processor.h"
 
+const char* ProcErrorMas[] = {"NO_ERR", 
+                            "STACK_ERR", 
+                            "CODE_ERR", 
+                            "NULL_ERR", 
+                            "CMD_IND_ERR", 
+                            "INPUT_ERR", 
+                            "REG_IND_ERR"};
+
+const char* StackErrorMas[] = { "NOTHING", 
+                                "NULLPTR", 
+                                "SIZE_ERR",
+                                "EMPTY_STACK",
+                                "CAPACITY_ERR",
+                                "CANARY_ERR",
+                                "REALLOC_ERR",
+                                "HASH_ERR",
+                                "CAP_SIZE_ERR",
+                                "VALUE_ERR",
+                                "OPERATION_ERR",
+                                "FILE_ERR"};
+    
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
     ON_DEBUG(PrintVarInfo(varinfo));
 
@@ -115,6 +136,100 @@ ProcessorErr_t StackPopReg(processor_t* proc) {
     return NO_ERR;
 }
 
+void ProcessorDump(processor_t* proc, VarInfo varinfo) {
+    printerr("\nProcDump called from %s: in function %s, line %d\n", varinfo.file_name, varinfo.func_name, varinfo.line_ind);
+    printerr("%s ", varinfo.object_name);
+
+    printerr("[");
+    if (proc == NULL) {
+        printerr(RED_COLOR "NULL" RESET_COLOR);
+        printerr("] ");
+        printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+    }
+    else {
+        printerr(GREEN_COLOR "%x" RESET_COLOR, proc);
+        printerr("]\n");
+    }
+
+    printerr("\t{\n");
+
+    if (proc) {
+        printerr("\tstack[");
+        if (proc->stack == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("] ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("] = { ");
+            stackverify(proc->stack);
+            if (code_error == NOTHING) {
+                for (size_t ind = 0; ind < proc->stack->size; ++ind)
+                    printerr(GREEN_COLOR "%d " RESET_COLOR, proc->stack->data[ind]);
+            }
+            else {
+                printerr(RED_COLOR " Some problem with stack of processor " RESET_COLOR);
+            }
+            printerr("};\n");
+        }
+
+        printerr("\n\tcode[");
+        if (proc->code == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("]; ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("];\n");
+        }
+
+        printerr("\n\tCount of commands = %d;\n", proc->cmd_cnt);
+
+        printerr("\n\tIndex of command = %d;\n", proc->cmd_ind);
+
+        printerr("\n\tregister[");
+        if (proc->regs == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("] ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("] = { ");
+            for (size_t ind = 0; ind < RegsCount - ErrorRegs; ++ind)
+                printerr(GREEN_COLOR "%d " RESET_COLOR, proc->regs[ind]);
+
+            int error_code = proc->regs[RegsCount - ErrorRegs];
+            if (error_code < 0 || error_code >= PROC_ERR_CNT) {
+                printerr(RED_COLOR "UNKNOWN_ERROR " RESET_COLOR);
+            }
+            else {
+                if (error_code)
+                    printerr(RED_COLOR "  %s " RESET_COLOR, ProcErrorMas[error_code]);
+                else   
+                    printerr(GREEN_COLOR "  %s " RESET_COLOR, ProcErrorMas[error_code]);
+            }
+
+            error_code = proc->regs[RegsCount - ErrorRegs + 1];
+            if (error_code < 0 || error_code >= STACK_ERR_CNT) {
+                printerr(RED_COLOR "UNKNOWN_ERROR " RESET_COLOR);
+            }
+            else {
+                if (error_code)
+                    printerr(RED_COLOR "  %s " RESET_COLOR, StackErrorMas[error_code]);
+                else   
+                    printerr(GREEN_COLOR "  %s " RESET_COLOR, StackErrorMas[error_code]);
+            }
+
+            printerr("};\n");
+        }
+    }
+
+    printerr("\t}\n");
+}
+
 ProcessorErr_t execution(const char* exec_file) {
     processor_t *proc = make_processor(exec_file);
 
@@ -143,15 +258,9 @@ ProcessorErr_t execution(const char* exec_file) {
                 break;
             case PUSHR:
                 proc_error = StackPushReg(proc);
-                if (proc_error != NO_ERR)
-                    return proc_error;
-
                 break;
             case POPR:
                 proc_error = StackPopReg(proc);
-                if (proc_error != NO_ERR)
-                    return proc_error;
-
                 break;
             case ADD:
                 error_code = StackAdd(proc->stack);
@@ -181,6 +290,7 @@ ProcessorErr_t execution(const char* exec_file) {
                 error_code = StackIn(proc->stack);
                 break;
             case HLT:
+                procdump(proc);
                 return NO_ERR;
                 break;
         }
@@ -188,9 +298,15 @@ ProcessorErr_t execution(const char* exec_file) {
         if (error_code != NOTHING) {
             proc->regs[err_regs_ind] = STACK_ERR;
             proc->regs[err_regs_ind + 1] = error_code;
+            procdump(proc);
             return STACK_ERR;
         }
-
+        
+        if (proc_error != NO_ERR) {
+            proc->regs[err_regs_ind] = proc_error;
+            procdump(proc);
+            return proc_error;
+        }
     }
 
     return NO_ERR;

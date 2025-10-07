@@ -8,6 +8,9 @@
 #include "text_utils.h"
 #include "vars.h"
 
+const size_t RegsCount = 6;
+const size_t ErrorRegs = 2;
+
 struct processor_t {
     stack_t *stack = NULL;
 
@@ -17,7 +20,7 @@ struct processor_t {
 
     int cmd_cnt = 0;
 
-    StackElem_t regs[6] = {0};
+    StackElem_t regs[RegsCount] = {0};
 };
 
 #ifdef DEBUG
@@ -25,6 +28,8 @@ struct processor_t {
 #else
 #define make_processor(code_file) ProcCtor(code_file)
 #endif
+
+#define procdump(name) ProcessorDump(name, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__))
 
 const int err_regs_ind = 4;
 
@@ -36,6 +41,7 @@ enum ProcessorErr_t {
     CMD_IND_ERR = 4,
     INPUT_ERR   = 5,
     REG_IND_ERR = 6,
+    PROC_ERR_CNT
 };
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
