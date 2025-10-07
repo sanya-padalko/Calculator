@@ -14,9 +14,11 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
 
     proc->code = make_text(code_file);
 
-    proc->cmd_cnt = proc->code->n_commands;
+    proc->bytecode = (int*)calloc(proc->code->file_size, sizeof(int));
 
-    proc->cmd_ind = 0;
+    proc->cmd_cnt = 0;
+
+    proc->ic = 0;
 
     proc->regs[4] = NO_ERR;
     proc->regs[5] = NOTHING;
@@ -52,7 +54,7 @@ ProcessorErr_t ProcVerify(processor_t* proc) {
         return CODE_ERR;
     }
 
-    if (proc->cmd_ind < 0 || proc->cmd_ind > proc->code->n_commands) {
+    if (proc->ic < 0 || proc->ic > proc->cmd_cnt) {
         proc->regs[4] = (StackElem_t)CMD_IND_ERR;
         return CMD_IND_ERR;
     }
@@ -61,16 +63,10 @@ ProcessorErr_t ProcVerify(processor_t* proc) {
     return NO_ERR;
 }
 
-ProcessorErr_t StackPushReg(processor_t* proc) {
+ProcessorErr_t ProcPushReg(processor_t* proc) {
     ProcVerify(proc);
 
-    int regs_ind = 0;
-    int scanf_check = sscanf(proc->code->mas_command[proc->cmd_ind] + 3, "%d", &regs_ind);
-
-    if (scanf_check != 1) {
-        printerr(RED_COLOR "Incorrect index of register input" RESET_COLOR);
-        return INPUT_ERR;
-    }
+    int regs_ind = proc->bytecode[proc->ic++];
 
     if (regs_ind < 0 || regs_ind > 3) {
         printerr(RED_COLOR "Unavailable index of register\n" RESET_COLOR);
@@ -87,16 +83,10 @@ ProcessorErr_t StackPushReg(processor_t* proc) {
     return NO_ERR;
 }
 
-ProcessorErr_t StackPopReg(processor_t* proc) {
+ProcessorErr_t ProcPopReg(processor_t* proc) {
     ProcVerify(proc);
 
-    int regs_ind = 0;
-    int scanf_check = sscanf(proc->code->mas_command[proc->cmd_ind] + 3, "%d", &regs_ind);
-
-    if (scanf_check != 1) {
-        printerr(RED_COLOR "Incorrect index of register input" RESET_COLOR);
-        return INPUT_ERR;
-    }
+    int regs_ind = proc->bytecode[proc->ic++];
 
     if (regs_ind < 0 || regs_ind > 3) {
         printerr(RED_COLOR "Unavailable index of register\n" RESET_COLOR);
@@ -111,6 +101,31 @@ ProcessorErr_t StackPopReg(processor_t* proc) {
     }
 
     proc->regs[regs_ind] = last;
+
+    return NO_ERR;
+}
+
+ProcessorErr_t ProcJmp(processor_t* proc) {
+    ProcVerify(proc);
+
+    proc->ic = proc->bytecode[proc->ic];
+
+    return NO_ERR;
+}
+
+ProcessorErr_t ProcJb(processor_t *proc) {
+    ProcVerify(proc);
+
+    if (proc->stack->size < 2) {
+        proc->regs[RegsCount - ErrorRegs + 1] = SIZE_ERR;
+        return STACK_ERR;
+    }
+
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
+
+    if (b < a)
+        proc->ic = proc->bytecode[proc->ic];
 
     return NO_ERR;
 }
@@ -166,7 +181,7 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
 
         printerr("\n\tCount of commands = %d;\n", proc->cmd_cnt);
 
-        printerr("\n\tIndex of command = %d;\n", proc->cmd_ind);
+        printerr("\n\tIndex of command = %d;\n", proc->ic);
 
         printerr("\n\tregister[");
         if (proc->regs == NULL) {
@@ -209,37 +224,67 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
     printerr("\t}\n");
 }
 
+ProcessorErr_t separate_commands(processor_t *proc) {
+    int cmd_ind = 0;
+
+    
+    
+    for (size_t ind = 0; ind < proc->code->file_size; ) {
+        char c = proc->code->buf[ind];
+        if (c < '0' || c > '9') {
+            ++ind;
+            continue;
+        }
+        int x = 0;
+        while ('0' <= c && c <= '9') {
+            x = x * 10 + (int)((char)c - '0');
+            ++ind;
+            c = proc->code->buf[ind];
+        }
+
+        proc->bytecode[cmd_ind++] = x;
+    }
+
+    proc->cmd_cnt = cmd_ind;
+}
+
 ProcessorErr_t execution(const char* exec_file) {
     processor_t *proc = make_processor(exec_file);
-
-    read_parse(proc->code);
-
     if (proc == NULL)
         return NULL_ERR;
+
+    input_data(proc->code);
+    separate_commands(proc);
 
     if (proc->regs[err_regs_ind] != NO_ERR)
         return (ProcessorErr_t)proc->regs[err_regs_ind];
 
     proc->regs[err_regs_ind + 1] = NOTHING;
-    StackOper operation = VOID;
+    int operation = 0;
 
-    for (proc->cmd_ind = 0; proc->cmd_ind < proc->cmd_cnt; ++proc->cmd_ind) {
-        sscanf(proc->code->mas_command[proc->cmd_ind], "%d", &operation);
+    for (proc->ic = 0; proc->ic < proc->cmd_cnt;) {
+        operation = proc->bytecode[proc->ic++];
         StackElem_t value = 0;
         StackErr_t error_code = NOTHING;
         ProcessorErr_t proc_error = NO_ERR;
 
         switch(operation) {
             case PUSH:
-                sscanf(proc->code->mas_command[proc->cmd_ind] + 2, "%d", &value);
+                value = proc->bytecode[proc->ic++];
 
                 error_code = StackPush(proc->stack, value);
                 break;
             case PUSHR:
-                proc_error = StackPushReg(proc);
+                proc_error = ProcPushReg(proc);
                 break;
             case POPR:
-                proc_error = StackPopReg(proc);
+                proc_error = ProcPopReg(proc);
+                break;
+            case JMP:
+                proc_error = ProcJmp(proc);
+                break;
+            case JB:
+                proc_error = ProcJb(proc);
                 break;
             case ADD:
                 error_code = StackAdd(proc->stack);

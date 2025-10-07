@@ -16,7 +16,9 @@ struct processor_t {
 
     Text *code = NULL;
 
-    int cmd_ind = 0;
+    int *bytecode;
+
+    int ic = 0;
 
     int cmd_cnt = 0;
 
