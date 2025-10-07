@@ -1,25 +1,4 @@
 #include "processor.h"
-
-const char* ProcErrorMas[] = {"NO_ERR", 
-                            "STACK_ERR", 
-                            "CODE_ERR", 
-                            "NULL_ERR", 
-                            "CMD_IND_ERR", 
-                            "INPUT_ERR", 
-                            "REG_IND_ERR"};
-
-const char* StackErrorMas[] = { "NOTHING", 
-                                "NULLPTR", 
-                                "SIZE_ERR",
-                                "EMPTY_STACK",
-                                "CAPACITY_ERR",
-                                "CANARY_ERR",
-                                "REALLOC_ERR",
-                                "HASH_ERR",
-                                "CAP_SIZE_ERR",
-                                "VALUE_ERR",
-                                "OPERATION_ERR",
-                                "FILE_ERR"};
     
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
     ON_DEBUG(PrintVarInfo(varinfo));
@@ -207,9 +186,9 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
             }
             else {
                 if (error_code)
-                    printerr(RED_COLOR "  %s " RESET_COLOR, ProcErrorMas[error_code]);
+                    printerr(RED_COLOR " %s " RESET_COLOR, ProcErrorMas[error_code]);
                 else   
-                    printerr(GREEN_COLOR "  %s " RESET_COLOR, ProcErrorMas[error_code]);
+                    printerr(GREEN_COLOR " %s " RESET_COLOR, ProcErrorMas[error_code]);
             }
 
             error_code = proc->regs[RegsCount - ErrorRegs + 1];
@@ -218,9 +197,9 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
             }
             else {
                 if (error_code)
-                    printerr(RED_COLOR "  %s " RESET_COLOR, StackErrorMas[error_code]);
+                    printerr(RED_COLOR " %s " RESET_COLOR, StackErrorMas[error_code]);
                 else   
-                    printerr(GREEN_COLOR "  %s " RESET_COLOR, StackErrorMas[error_code]);
+                    printerr(GREEN_COLOR " %s " RESET_COLOR, StackErrorMas[error_code]);
             }
 
             printerr("};\n");

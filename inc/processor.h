@@ -44,11 +44,25 @@ enum ProcessorErr_t {
     PROC_ERR_CNT
 };
 
+const char* const ProcErrorMas[] = {"NO_ERR", 
+                            "STACK_ERR", 
+                            "CODE_ERR", 
+                            "NULL_ERR", 
+                            "CMD_IND_ERR", 
+                            "INPUT_ERR", 
+                            "REG_IND_ERR"};
+
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
 
 ProcessorErr_t ProcDtor(processor_t* proc);
 
 ProcessorErr_t ProcVerify(processor_t* proc);
+
+ProcessorErr_t StackPushReg(processor_t* proc);
+
+ProcessorErr_t StackPopReg(processor_t* proc);
+
+void ProcessorDump(processor_t* proc, VarInfo varinfo);
 
 ProcessorErr_t execution(const char* exec_file);
 

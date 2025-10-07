@@ -35,6 +35,19 @@ enum StackErr_t {
     STACK_ERR_CNT 
 };
 
+const char* const StackErrorMas[] = { "NOTHING", 
+                                "NULLPTR", 
+                                "SIZE_ERR",
+                                "EMPTY_STACK",
+                                "CAPACITY_ERR",
+                                "CANARY_ERR",
+                                "REALLOC_ERR",
+                                "HASH_ERR",
+                                "CAP_SIZE_ERR",
+                                "VALUE_ERR",
+                                "OPERATION_ERR",
+                                "FILE_ERR"};
+
 void ParseErr(StackErr_t error_type);
 
 #endif // _ERRORS_H
