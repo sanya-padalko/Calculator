@@ -12,10 +12,6 @@ struct Text {
     int file_size = 0;
     
     char* buf = 0;
-    
-    int n_commands = 0;
-
-    char** mas_command = 0;
 };
 
 #define make_text(file_name) TextCtor(file_name)
@@ -24,14 +20,6 @@ Text* TextCtor(const char* file_name);
 
 int get_file_size(const char* file_name);
 
-void count_strings(Text* text);
-
-void separate_strings(Text* text);
-
-void output_data(Text* text);
-
 void input_data(Text* text);
-
-void read_parse(Text* text);
 
 #endif
