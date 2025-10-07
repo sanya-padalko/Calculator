@@ -3,7 +3,7 @@
 VarInfo VarInfoCtor(const char* object_name, const char* file_name, const char* func_name, const int line_ind) {
     VarInfo varinfo = {};
 
-    varinfo.name = object_name;
+    varinfo.object_name = object_name;
     varinfo.file_name  = file_name;
     varinfo.func_name  = func_name;
     varinfo.line_ind   = line_ind;
