@@ -31,7 +31,8 @@ enum StackErr_t {
     CAP_SIZE_ERR   =   8,
     VALUE_ERR      =   9,
     OPERATION_ERR  =  10,  
-    FILE_ERR       =  11,   
+    FILE_ERR       =  11,  
+    STACK_ERR_CNT 
 };
 
 void ParseErr(StackErr_t error_type);
