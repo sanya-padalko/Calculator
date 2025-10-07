@@ -7,6 +7,12 @@
 #include "calculator.h"
 #include "processor.h"
 
+#define check_scanf(real_cnt, needed_cnt, func_name)    if (real_cnt != needed_cnt) { \
+                                                            printerr(RED_COLOR "%s must have 1 argument\n" RESET_COLOR, func_name); \
+                                                            return VALUE_ERR; \
+                                                        }
+
+
 enum OperCode { 
     PUSH_CODE  = 588,
     ADD_CODE   = 353,
@@ -22,6 +28,10 @@ enum OperCode {
     POPR_CODE  =  29,
     HLT_CODE   = 560,
 };
+
+const int MaxOperationSize = 5;
+
+int CalcOperHash(const char* operation);
 
 StackErr_t assembler(const char* text_file, const char* commands_file);
 

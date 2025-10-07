@@ -1,5 +1,15 @@
 #include "assembler.h"
 
+int CalcOperHash(char* operation) {
+    int operation_code = 0;
+    for (int c = 0; c < MaxOperationSize; ++c) {
+        operation_code = ((operation_code * 13) + operation[c]) % 1000;
+        operation[c] = 0;
+    }
+
+    return operation_code;
+}
+
 StackErr_t assembler(const char* text_file, const char* commands_file) {
     FILE* start = fopen(text_file, "r");
     if (!start) {
@@ -13,18 +23,12 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
         return FILE_ERR;
     }
 
-    char operation[6] = {}; // константа
-
+    char operation[MaxOperationSize + 1] = {};
     StackErr_t error_code = NOTHING;
-
     bool is_end = false;
 
     while (fscanf(start, "%s", &operation) == 1) {
-        int operation_code = 0;
-        for (int c = 0; c < 5; ++c) { // константа
-            operation_code = ((operation_code * 13) + operation[c]) % 1000; // в функцию, можно % 1000
-            operation[c] = 0;
-        }
+        int operation_code = CalcOperHash(operation);
 
         StackElem_t value = 0;
         int correct = 0;
@@ -33,34 +37,19 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
         switch (operation_code) {
             case PUSH_CODE:
                 correct = fscanf(start, "%d", &value);
-                if (correct != 1) {
-                    printerr(RED_COLOR "PUSH must have 1 argument\n" RESET_COLOR);
-                    fclose(start);
-                    fclose(ex_file);
-                    return VALUE_ERR;
-                }
+                check_scanf(correct, 1, "PUSH");
 
                 fprintf(ex_file, "%d %d\n", PUSH, value);
                 break;
             case PUSHR_CODE:
                 correct = fscanf(start, " %c", &reg_type);
-                if (correct != 1) {
-                    printerr(RED_COLOR "PUSHR must have 1 argument\n" RESET_COLOR);
-                    fclose(start);
-                    fclose(ex_file);
-                    return VALUE_ERR;
-                }
+                check_scanf(correct, 1, "PUSHR");
 
                 fprintf(ex_file, "%d %d\n", PUSHR, (reg_type - 'A'));
                 break;
             case POPR_CODE:
                 correct = fscanf(start, " %c", &reg_type);
-                if (correct != 1) {
-                    printerr(RED_COLOR "POPR must have 1 argument\n" RESET_COLOR);
-                    fclose(start);
-                    fclose(ex_file);
-                    return VALUE_ERR;
-                }
+                check_scanf(correct, 1, "POPR");
 
                 fprintf(ex_file, "%d %d\n", POPR, (reg_type - 'A'));
                 break;
