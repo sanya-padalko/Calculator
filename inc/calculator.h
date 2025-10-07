@@ -18,6 +18,8 @@ enum StackOper {
     IN    = 11,
     PUSHR = 12, 
     POPR  = 13,
+    JMP   = 14,
+    JB    = 15,
 };
 
 StackErr_t StackAdd(stack_t *stack);

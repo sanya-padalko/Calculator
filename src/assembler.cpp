@@ -32,7 +32,8 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
 
         StackElem_t value = 0;
         int correct = 0;
-        char reg_type;
+        char reg_type[3] = {0};
+        int new_ic = 0;
         
         switch (operation_code) {
             case PUSH_CODE:
@@ -42,16 +43,28 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
                 fprintf(ex_file, "%d %d\n", PUSH, value);
                 break;
             case PUSHR_CODE:
-                correct = fscanf(start, " %c", &reg_type);
+                correct = fscanf(start, " %s", &reg_type);
                 check_scanf(correct, 1, "PUSHR");
 
-                fprintf(ex_file, "%d %d\n", PUSHR, (reg_type - 'A'));
+                fprintf(ex_file, "%d %d\n", PUSHR, (reg_type[1] - 'A'));
                 break;
             case POPR_CODE:
-                correct = fscanf(start, " %c", &reg_type);
+                correct = fscanf(start, " %s", &reg_type);
                 check_scanf(correct, 1, "POPR");
 
-                fprintf(ex_file, "%d %d\n", POPR, (reg_type - 'A'));
+                fprintf(ex_file, "%d %d\n", POPR, (reg_type[1] - 'A'));
+                break;
+            case JMP_CODE:
+                correct = fscanf(start, "%d", &new_ic);
+                check_scanf(correct, 1, "JMP");
+                
+                fprintf(ex_file, "%d %d\n", JMP, new_ic);
+                break;
+            case JB_CODE:
+                correct = fscanf(start, "%d", &new_ic);
+                check_scanf(correct, 1, "JB");
+                
+                fprintf(ex_file, "%d %d\n", JB, new_ic);
                 break;
             case ADD_CODE:
                 fprintf(ex_file, "%d\n", ADD);
@@ -104,74 +117,4 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
     fclose(ex_file);
     
     return error_code;
-}
-
-StackErr_t disassembler(const char* commands_file, const char* text_file) {
-    FILE* start = fopen(text_file, "w");
-    FILE* ex_file = fopen(commands_file, "r");
-
-    if (!start) {
-        printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, commands_file);
-        return FILE_ERR;
-    }
-
-    if (!ex_file) {
-        printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, text_file);
-        return FILE_ERR;
-    }
-
-    int oper = 0;
-
-    while (fscanf(ex_file, "%d", &oper) == 1) {
-        int value = 0;
-
-        switch(oper) {
-            case 1:     // magic number
-                fprintf(start, "PUSH ");
-                if (fscanf(ex_file, "%d", &value) == 1) {
-                    fprintf(start, "%d\n", value);
-                }
-                else {
-                    printerr(RED_COLOR "First operation must have 1 argument\n" RESET_COLOR);
-                    fclose(start);
-                    fclose(ex_file);
-                    return VALUE_ERR;
-                }
-                break;
-            case 2:
-                fprintf(start, "ADD\n");
-                break;
-            case 3:
-                fprintf(start, "SUB\n");
-                break;
-            case 4:
-                fprintf(start, "MUL\n");
-                break;
-            case 5:
-                fprintf(start, "DIV\n");
-                break;
-            case 6:
-                fprintf(start, "SQRT\n");
-                break;
-            case 7:
-                fprintf(start, "POW\n");
-                break;
-            case 8:
-                fprintf(start, "OUT\n");
-                break;
-            case 9:
-                fprintf(start, "HLT\n");
-                break;
-            default:
-                printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
-                fclose(start);
-                fclose(ex_file);
-                return OPERATION_ERR;
-        }
-    }
-
-    fclose(start);
-    fclose(ex_file);
-
-    return NOTHING;
 }

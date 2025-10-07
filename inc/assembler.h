@@ -27,6 +27,8 @@ enum OperCode {
     PUSHR_CODE = 670,
     POPR_CODE  =  29,
     HLT_CODE   = 560,
+    JMP_CODE   = 203,
+    JB_CODE    = 516,
 };
 
 const int MaxOperationSize = 5;
