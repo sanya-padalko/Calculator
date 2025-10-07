@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 struct VarInfo {
-    const char* stack_name = "";
+    const char* object_name = "";
 
     const char* file_name  = "";
     
@@ -13,7 +13,7 @@ struct VarInfo {
     int line_ind     =  0;
 };
 
-VarInfo VarInfoCtor(const char* stack_name, const char* file_name, const char* func_name, const int line_ind);
+VarInfo VarInfoCtor(const char* object_name, const char* file_name, const char* func_name, const int line_ind);
 
 void PrintVarInfo(const VarInfo varinfo);
 
