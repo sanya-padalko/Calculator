@@ -28,9 +28,9 @@ const StackElem_t CANARY_RIGHT = 65242; // FEDA
 #define ON_DEBUG(...)
 #endif
 
-#define make_stack(capacity) StackCtor(capacity ON_DEBUG(, VarInfoCtor("stack", __FILE__, __FUNCTION__, __LINE__)))
+#define make_stack(capacity) StackCtor(capacity ON_DEBUG(, VarInfoCtor("stack", line_info)))
 
-#define stackdump(name) StackDump(name, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__));
+#define stackdump(name) StackDump(name, VarInfoCtor(#name, line_info));
 
 #define stackverify(stack)  CodeError_t code_error = StackVerify(stack); \
                             if (code_error != NOTHING) { \

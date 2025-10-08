@@ -16,8 +16,8 @@ struct Text {
 
 Text* TextCtor(const char* file_name);
 
-int get_file_size(const char* file_name);
+int GetFileSize(const char* file_name);
 
-void input_data(Text* text);
+CodeError_t ReadFile(Text* text);
 
 #endif
