@@ -7,13 +7,7 @@
 #include "calculator.h"
 #include "processor.h"
 
-#define check_scanf(real_cnt, needed_cnt, func_name)    if (real_cnt != needed_cnt) { \
-                                                            printerr(RED_COLOR "%s must have 1 argument\n" RESET_COLOR, func_name); \
-                                                            return VALUE_ERR; \
-                                                        }
-
-
-enum OperCode { // в структуру
+enum OperCode {
     PUSH_CODE  = 588,
     ADD_CODE   = 353,
     SUB_CODE   = 462,
