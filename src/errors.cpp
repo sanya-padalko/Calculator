@@ -1,6 +1,7 @@
 #include "errors.h"
 
-void PrintErr(StackErr_t error_type) {
+void PrintErr(CodeError_t error_type, const char* file_name, const char* func_name, const int line_ind) {
+    printerr(RED_COLOR "error in %s: function -> %s, line %d: " RESET_COLOR, file_name, func_name, line_ind);
     switch (error_type) {
         case NOTHING:
             printerr(GREEN_COLOR "Everything is OK\n");
@@ -37,6 +38,21 @@ void PrintErr(StackErr_t error_type) {
             break;
         case FILE_ERR:
             printerr(RED_COLOR "Working with file went wrong\n");
+            break;
+        case STACK_ERR:
+            printerr(RED_COLOR "Something went wrong with stack\n");
+            break;
+        case CODE_ERR:
+            printerr(RED_COLOR "Something went wrong witch code\n");
+            break;
+        case CMD_IND_ERR:
+            printerr(RED_COLOR "Unavailbable index of command\n");
+            break;
+        case INPUT_ERR:
+            printerr(RED_COLOR "Wrong input\n");
+            break;
+        case REG_IND_ERR:
+            printerr(RED_COLOR "Unavailable index of register\n");
             break;
         default:
             printerr(YELLOW_COLOR "Unknown error\n");

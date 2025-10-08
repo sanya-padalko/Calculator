@@ -3,7 +3,7 @@
 static StackElem_t calc_sqrt(StackElem_t value);
 static StackElem_t pow(StackElem_t a, StackElem_t b);
 
-StackErr_t StackAdd(stack_t *stack) {
+CodeError_t StackAdd(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
@@ -16,7 +16,7 @@ StackErr_t StackAdd(stack_t *stack) {
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
 
-    StackErr_t error_code = StackPush(stack, b + a);
+    CodeError_t error_code = StackPush(stack, b + a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Addition was not completed\n" RESET_COLOR);
@@ -24,7 +24,7 @@ StackErr_t StackAdd(stack_t *stack) {
     return error_code;
 }
 
-StackErr_t StackSub(stack_t *stack) {
+CodeError_t StackSub(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
@@ -37,7 +37,7 @@ StackErr_t StackSub(stack_t *stack) {
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
 
-    StackErr_t error_code = StackPush(stack, b - a);
+    CodeError_t error_code = StackPush(stack, b - a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Subtraction was not completed\n" RESET_COLOR);
@@ -45,7 +45,7 @@ StackErr_t StackSub(stack_t *stack) {
     return error_code;
 }
 
-StackErr_t StackMul(stack_t *stack) {
+CodeError_t StackMul(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
@@ -58,7 +58,7 @@ StackErr_t StackMul(stack_t *stack) {
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
 
-    StackErr_t error_code = StackPush(stack, b * a);
+    CodeError_t error_code = StackPush(stack, b * a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Multiplication was not completed\n" RESET_COLOR);
@@ -66,7 +66,7 @@ StackErr_t StackMul(stack_t *stack) {
     return error_code;
 }
 
-StackErr_t StackDiv(stack_t *stack) {
+CodeError_t StackDiv(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
@@ -84,7 +84,7 @@ StackErr_t StackDiv(stack_t *stack) {
         return VALUE_ERR;
     }
 
-    StackErr_t error_code = StackPush(stack, b / a);
+    CodeError_t error_code = StackPush(stack, b / a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Division was not completed\n" RESET_COLOR);
@@ -112,13 +112,13 @@ static StackElem_t calc_sqrt(StackElem_t value) {
     return l;
 }
 
-StackErr_t StackSqrt(stack_t *stack) {
+CodeError_t StackSqrt(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
 
     if (stack->size == 0) {
-        PrintErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK, line_info);
         return EMPTY_STACK;
     }
 
@@ -131,7 +131,7 @@ StackErr_t StackSqrt(stack_t *stack) {
         return VALUE_ERR;
     }
 
-    StackErr_t error_code = StackPush(stack, sqrt_a);
+    CodeError_t error_code = StackPush(stack, sqrt_a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Squarting was not completed\n" RESET_COLOR);
@@ -148,7 +148,7 @@ static StackElem_t pow(StackElem_t a, StackElem_t b) {
     return res;
 }
 
-StackErr_t StackPow(stack_t *stack) {
+CodeError_t StackPow(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
         return code_error;
@@ -166,7 +166,7 @@ StackErr_t StackPow(stack_t *stack) {
         return VALUE_ERR;
     }
 
-    StackErr_t error_code = StackPush(stack, pow(b, a));
+    CodeError_t error_code = StackPush(stack, pow(b, a));
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Exponentation was not completed\n" RESET_COLOR);
@@ -174,13 +174,13 @@ StackErr_t StackPow(stack_t *stack) {
     return error_code;
 }
 
-StackErr_t StackOut(stack_t *stack) {
+CodeError_t StackOut(stack_t *stack) {
     stackverify(stack);
     if (code_error)
         return code_error;
 
     if (stack->size < 1) {
-        PrintErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK, line_info);
         return EMPTY_STACK;
     }
 
@@ -196,13 +196,13 @@ StackErr_t StackOut(stack_t *stack) {
     return NOTHING;
 }
 
-StackErr_t StackTop(stack_t *stack) {
+CodeError_t StackTop(stack_t *stack) {
     stackverify(stack);
     if (code_error)
         return code_error;
 
     if (stack->size < 1) {
-        PrintErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK, line_info);
         return EMPTY_STACK;
     }
 
@@ -211,7 +211,7 @@ StackErr_t StackTop(stack_t *stack) {
     return NOTHING;
 }
 
-StackErr_t StackIn(stack_t *stack) {
+CodeError_t StackIn(stack_t *stack) {
     stackverify(stack);
     if (code_error) 
         return code_error;
@@ -224,7 +224,7 @@ StackErr_t StackIn(stack_t *stack) {
         return VALUE_ERR;
     }
 
-    StackErr_t error_code = StackPush(stack, value);
+    CodeError_t error_code = StackPush(stack, value);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Input was not completed\n" RESET_COLOR);

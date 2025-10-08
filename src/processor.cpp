@@ -20,12 +20,12 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
 
     proc->ic = 0;
 
-    proc->regs[4] = NO_ERR;
+    proc->regs[4] = NOTHING;
     proc->regs[5] = NOTHING;
 }
 
-ProcessorErr_t ProcDtor(processor_t* proc) {
-    if (ProcVerify(proc) != NO_ERR)
+CodeError_t ProcDtor(processor_t* proc) {
+    if (ProcVerify(proc) != NOTHING)
         return ProcVerify(proc);
 
     free(proc->stack);
@@ -35,10 +35,10 @@ ProcessorErr_t ProcDtor(processor_t* proc) {
     free(proc);
     proc = NULL;
 
-    return NO_ERR;
+    return NOTHING;
 }
 
-ProcessorErr_t ProcVerify(processor_t* proc) {
+CodeError_t ProcVerify(processor_t* proc) {
     if (proc == NULL)
         return NULL_ERR;
     
@@ -59,11 +59,11 @@ ProcessorErr_t ProcVerify(processor_t* proc) {
         return CMD_IND_ERR;
     }
 
-    proc->regs[4] = (StackElem_t)NO_ERR;
-    return NO_ERR;
+    proc->regs[4] = (StackElem_t)NOTHING;
+    return NOTHING;
 }
 
-ProcessorErr_t ProcPushReg(processor_t* proc) {
+CodeError_t ProcPushReg(processor_t* proc) {
     ProcVerify(proc);
 
     int regs_ind = proc->bytecode[proc->ic++];
@@ -73,17 +73,17 @@ ProcessorErr_t ProcPushReg(processor_t* proc) {
         return REG_IND_ERR;
     }
 
-    StackErr_t error_code = StackPush(proc->stack, proc->regs[regs_ind]);
+    CodeError_t error_code = StackPush(proc->stack, proc->regs[regs_ind]);
 
     if (error_code != NOTHING) {
         printerr(RED_COLOR "Pushing from regitster to stack went wrong\n", RESET_COLOR);
         return STACK_ERR;
     }
 
-    return NO_ERR;
+    return NOTHING;
 }
 
-ProcessorErr_t ProcPopReg(processor_t* proc) {
+CodeError_t ProcPopReg(processor_t* proc) {
     ProcVerify(proc);
 
     int regs_ind = proc->bytecode[proc->ic++];
@@ -102,18 +102,18 @@ ProcessorErr_t ProcPopReg(processor_t* proc) {
 
     proc->regs[regs_ind] = last;
 
-    return NO_ERR;
+    return NOTHING;
 }
 
-ProcessorErr_t ProcJmp(processor_t* proc) {
+CodeError_t ProcJmp(processor_t* proc) {
     ProcVerify(proc);
 
     proc->ic = proc->bytecode[proc->ic];
 
-    return NO_ERR;
+    return NOTHING;
 }
 
-ProcessorErr_t ProcJb(processor_t *proc) {
+CodeError_t ProcJb(processor_t *proc) {
     ProcVerify(proc);
 
     if (proc->stack->size < 2) {
@@ -127,7 +127,7 @@ ProcessorErr_t ProcJb(processor_t *proc) {
     if (b < a)
         proc->ic = proc->bytecode[proc->ic];
 
-    return NO_ERR;
+    return NOTHING;
 }
 
 void ProcessorDump(processor_t* proc, VarInfo varinfo) {
@@ -195,26 +195,17 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
             for (size_t ind = 0; ind < RegsCount - ErrorRegs; ++ind)
                 printerr(GREEN_COLOR "%d " RESET_COLOR, proc->regs[ind]);
 
-            int error_code = proc->regs[RegsCount - ErrorRegs];
-            if (error_code < 0 || error_code >= PROC_ERR_CNT) {
-                printerr(RED_COLOR "UNKNOWN_ERROR " RESET_COLOR);
-            }
-            else {
-                if (error_code)
-                    printerr(RED_COLOR " %s " RESET_COLOR, ProcErrorMas[error_code]);
-                else   
-                    printerr(GREEN_COLOR " %s " RESET_COLOR, ProcErrorMas[error_code]);
-            }
-
-            error_code = proc->regs[RegsCount - ErrorRegs + 1];
-            if (error_code < 0 || error_code >= STACK_ERR_CNT) {
-                printerr(RED_COLOR "UNKNOWN_ERROR " RESET_COLOR);
-            }
-            else {
-                if (error_code)
-                    printerr(RED_COLOR " %s " RESET_COLOR, StackErrorMas[error_code]);
-                else   
-                    printerr(GREEN_COLOR " %s " RESET_COLOR, StackErrorMas[error_code]);
+            for (size_t ind = RegsCount - ErrorRegs; ind < RegsCount; ++ind) {
+                int error_code = proc->regs[ind];
+                if (error_code < 0 || error_code >= ERROR_COUNTS) {
+                    printerr(RED_COLOR "UNKNOWN_ERROR " RESET_COLOR);
+                }
+                else {
+                    if (error_code)
+                        printerr(RED_COLOR " %s " RESET_COLOR, CodeErrorMas[error_code]);
+                    else
+                        printerr(GREEN_COLOR " %s " RESET_COLOR, CodeErrorMas[error_code]);
+                }
             }
 
             printerr("};\n");
@@ -224,7 +215,7 @@ void ProcessorDump(processor_t* proc, VarInfo varinfo) {
     printerr("\t}\n");
 }
 
-ProcessorErr_t separate_commands(processor_t *proc) {
+CodeError_t separate_commands(processor_t *proc) {
     int cmd_ind = 0;
 
     
@@ -248,7 +239,7 @@ ProcessorErr_t separate_commands(processor_t *proc) {
     proc->cmd_cnt = cmd_ind;
 }
 
-ProcessorErr_t execution(const char* exec_file) {
+CodeError_t execution(const char* exec_file) {
     processor_t *proc = make_processor(exec_file);
     if (proc == NULL)
         return NULL_ERR;
@@ -256,8 +247,8 @@ ProcessorErr_t execution(const char* exec_file) {
     input_data(proc->code);
     separate_commands(proc);
 
-    if (proc->regs[err_regs_ind] != NO_ERR)
-        return (ProcessorErr_t)proc->regs[err_regs_ind];
+    if (proc->regs[err_regs_ind] != NOTHING)
+        return (CodeError_t)proc->regs[err_regs_ind];
 
     proc->regs[err_regs_ind + 1] = NOTHING;
     int operation = 0;
@@ -265,8 +256,8 @@ ProcessorErr_t execution(const char* exec_file) {
     for (proc->ic = 0; proc->ic < proc->cmd_cnt;) {
         operation = proc->bytecode[proc->ic++];
         StackElem_t value = 0;
-        StackErr_t error_code = NOTHING;
-        ProcessorErr_t proc_error = NO_ERR;
+        CodeError_t error_code = NOTHING;
+        CodeError_t proc_error = NOTHING;
 
         switch(operation) {
             case PUSH:
@@ -315,7 +306,7 @@ ProcessorErr_t execution(const char* exec_file) {
                 break;
             case HLT:
                 procdump(proc);
-                return NO_ERR;
+                return NOTHING;
                 break;
         }
 
@@ -326,12 +317,12 @@ ProcessorErr_t execution(const char* exec_file) {
             return STACK_ERR;
         }
         
-        if (proc_error != NO_ERR) {
+        if (proc_error != NOTHING) {
             proc->regs[err_regs_ind] = proc_error;
             procdump(proc);
             return proc_error;
         }
     }
 
-    return NO_ERR;
+    return NOTHING;
 }

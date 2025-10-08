@@ -31,6 +31,6 @@ enum OperCode { // в структуру
     JB_CODE    = 516,
 };
 
-StackErr_t assembler(const char* text_file, const char* commands_file);
+CodeError_t assembler(const char* text_file, const char* commands_file);
 
 #endif

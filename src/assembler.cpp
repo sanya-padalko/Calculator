@@ -14,7 +14,7 @@ int CalcOperHash(char* operation) {
     return operation_code;
 }
 
-StackErr_t assembler(const char* text_file, const char* commands_file) {
+CodeError_t assembler(const char* text_file, const char* commands_file) {
     FILE* start = fopen(text_file, "r");
     if (!start) {
         printerr(RED_COLOR "Couldn't open the file %s" RESET_COLOR, commands_file);
@@ -28,7 +28,7 @@ StackErr_t assembler(const char* text_file, const char* commands_file) {
     }
 
     char operation[MaxOperationSize + 1] = {};
-    StackErr_t error_code = NOTHING;
+    CodeError_t error_code = NOTHING;
     bool is_end = false;
 
     while (fscanf(start, "%s", &operation) == 1) {

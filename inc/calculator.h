@@ -22,22 +22,22 @@ enum StackOper {
     JB    = 15,
 };
 
-StackErr_t StackAdd(stack_t *stack);
+CodeError_t StackAdd(stack_t *stack);
 
-StackErr_t StackSub(stack_t *stack);
+CodeError_t StackSub(stack_t *stack);
 
-StackErr_t StackMul(stack_t *stack);
+CodeError_t StackMul(stack_t *stack);
 
-StackErr_t StackDiv(stack_t *stack);
+CodeError_t StackDiv(stack_t *stack);
 
-StackErr_t StackSqrt(stack_t *stack);
+CodeError_t StackSqrt(stack_t *stack);
 
-StackErr_t StackPow(stack_t *stack);
+CodeError_t StackPow(stack_t *stack);
 
-StackErr_t StackOut(stack_t *stack);
+CodeError_t StackOut(stack_t *stack);
 
-StackErr_t StackTop(stack_t *stack);
+CodeError_t StackTop(stack_t *stack);
 
-StackErr_t StackIn(stack_t *stack);
+CodeError_t StackIn(stack_t *stack);
 
 #endif

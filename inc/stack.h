@@ -32,10 +32,10 @@ const StackElem_t CANARY_RIGHT = 65242; // FEDA
 
 #define stackdump(name) StackDump(name, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__));
 
-#define stackverify(stack)  StackErr_t code_error = StackVerify(stack); \
+#define stackverify(stack)  CodeError_t code_error = StackVerify(stack); \
                             if (code_error != NOTHING) { \
                                 ON_DEBUG(stackdump(stack)); \
-                                PrintErr(code_error); \
+                                PrintErr(code_error, line_info); \
                             }
 
 const long mod = 998244353;
@@ -51,13 +51,13 @@ const int BaseStackSize = 1;
 
 stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo));
 
-StackErr_t StackDtor(stack_t *stack);
+CodeError_t StackDtor(stack_t *stack);
 
-StackErr_t StackPush(stack_t *stack, StackElem_t new_value);
+CodeError_t StackPush(stack_t *stack, StackElem_t new_value);
 
 StackElem_t StackPop(stack_t *stack);
 
-StackErr_t StackVerify(stack_t* stack);
+CodeError_t StackVerify(stack_t* stack);
 
 void StackDump(stack_t *stack, VarInfo varinfo);
 

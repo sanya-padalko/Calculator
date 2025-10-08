@@ -31,37 +31,18 @@ struct processor_t {
 
 const int err_regs_ind = 4;
 
-enum ProcessorErr_t {
-    NO_ERR      = 0,
-    STACK_ERR   = 1,
-    CODE_ERR    = 2,
-    NULL_ERR    = 3,
-    CMD_IND_ERR = 4,
-    INPUT_ERR   = 5,
-    REG_IND_ERR = 6,
-    PROC_ERR_CNT
-};
-
-const char* const ProcErrorMas[] = {"NO_ERR", 
-                            "STACK_ERR", 
-                            "CODE_ERR", 
-                            "NULL_ERR", 
-                            "CMD_IND_ERR", 
-                            "INPUT_ERR", 
-                            "REG_IND_ERR"};
-
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
 
-ProcessorErr_t ProcDtor(processor_t* proc);
+CodeError_t ProcDtor(processor_t* proc);
 
-ProcessorErr_t ProcVerify(processor_t* proc);
+CodeError_t ProcVerify(processor_t* proc);
 
-ProcessorErr_t StackPushReg(processor_t* proc);
+CodeError_t StackPushReg(processor_t* proc);
 
-ProcessorErr_t StackPopReg(processor_t* proc);
+CodeError_t StackPopReg(processor_t* proc);
 
 void ProcessorDump(processor_t* proc, VarInfo varinfo);
 
-ProcessorErr_t execution(const char* exec_file);
+CodeError_t execution(const char* exec_file);
 
 #endif
