@@ -1,5 +1,9 @@
 #include "assembler.h"
 
+const int MaxOperationSize = 5;
+
+int CalcOperHash(char* operation);
+
 int CalcOperHash(char* operation) {
     int operation_code = 0;
     for (int c = 0; c < MaxOperationSize; ++c) {

@@ -9,7 +9,7 @@
     if (comp == 0) { \
         printerr("%d\n", comp); \
         printerr(RED_COLOR "error in %s: function -> %s, line %d: " RESET_COLOR, __FILE__, __FUNCTION__, __LINE__); \
-        ParseErr(code_err); \
+        PrintErr(code_err); \
         return ret_value; \
     }
 
@@ -48,6 +48,6 @@ const char* const StackErrorMas[] = { "NOTHING",
                                 "OPERATION_ERR",
                                 "FILE_ERR"};
 
-void ParseErr(StackErr_t error_type);
+void PrintErr(StackErr_t error_type);
 
 #endif // _ERRORS_H

@@ -12,7 +12,7 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
 
     proc->stack = make_stack(BaseStackSize);
 
-    proc->code = make_text(code_file);
+    proc->code = TextCtor(code_file);
 
     proc->bytecode = (int*)calloc(proc->code->file_size, sizeof(int));
 

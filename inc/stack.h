@@ -23,19 +23,19 @@ const StackElem_t CANARY_LEFT  = 52954; // CEDA
 const StackElem_t CANARY_RIGHT = 65242; // FEDA
 
 #ifdef DEBUG
-#define make_stack(capacity) StackCtor(capacity, VarInfoCtor("stack", __FILE__, __FUNCTION__, __LINE__))
 #define ON_DEBUG(...) __VA_ARGS__
 #else
-#define make_stack(capacity) StackCtor(capacity)
 #define ON_DEBUG(...)
 #endif
+
+#define make_stack(capacity) StackCtor(capacity ON_DEBUG(, VarInfoCtor("stack", __FILE__, __FUNCTION__, __LINE__)))
 
 #define stackdump(name) StackDump(name, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__));
 
 #define stackverify(stack)  StackErr_t code_error = StackVerify(stack); \
                             if (code_error != NOTHING) { \
                                 ON_DEBUG(stackdump(stack)); \
-                                ParseErr(code_error); \
+                                PrintErr(code_error); \
                             }
 
 const long mod = 998244353;
@@ -47,18 +47,11 @@ const int ExpandMn =  2;
 const int CheckMn  =  4;
 const int NarrowMn =  3;
 const int BadSize  = -1;
-
 const int BaseStackSize = 1;
-
-unsigned long calc_hash(stack_t *stack);
-
-void fill_poizon(stack_t *stack, int left, int right);
 
 stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo));
 
 StackErr_t StackDtor(stack_t *stack);
-
-static int StackRealloc(stack_t *stack, ssize_t new_size);
 
 StackErr_t StackPush(stack_t *stack, StackElem_t new_value);
 

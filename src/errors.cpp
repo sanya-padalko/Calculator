@@ -1,6 +1,6 @@
 #include "errors.h"
 
-void ParseErr(StackErr_t error_type) {
+void PrintErr(StackErr_t error_type) {
     switch (error_type) {
         case NOTHING:
             printerr(GREEN_COLOR "Everything is OK\n");

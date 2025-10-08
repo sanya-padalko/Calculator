@@ -1,5 +1,8 @@
 #include "calculator.h"
 
+static StackElem_t calc_sqrt(StackElem_t value);
+static StackElem_t pow(StackElem_t a, StackElem_t b);
+
 StackErr_t StackAdd(stack_t *stack) {
     stackverify(stack);
     if (code_error != NOTHING)
@@ -115,7 +118,7 @@ StackErr_t StackSqrt(stack_t *stack) {
         return code_error;
 
     if (stack->size == 0) {
-        ParseErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK);
         return EMPTY_STACK;
     }
 
@@ -177,7 +180,7 @@ StackErr_t StackOut(stack_t *stack) {
         return code_error;
 
     if (stack->size < 1) {
-        ParseErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK);
         return EMPTY_STACK;
     }
 
@@ -199,7 +202,7 @@ StackErr_t StackTop(stack_t *stack) {
         return code_error;
 
     if (stack->size < 1) {
-        ParseErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK);
         return EMPTY_STACK;
     }
 

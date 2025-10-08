@@ -8,13 +8,11 @@
 #include "errors.h"
 
 struct Text {
-    const char *name = "";
+    const char *file_name = "";
     int file_size = 0;
     
     char* buf = 0;
 };
-
-#define make_text(file_name) TextCtor(file_name)
 
 Text* TextCtor(const char* file_name);
 

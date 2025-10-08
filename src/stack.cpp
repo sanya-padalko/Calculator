@@ -1,5 +1,11 @@
 #include "stack.h"
 
+unsigned long calc_hash(stack_t *stack);
+
+void fill_poizon(stack_t *stack, int left, int right);
+
+static int StackRealloc(stack_t *stack, ssize_t new_size);
+
 unsigned long calc_hash(stack_t *stack) {
     unsigned long hash = 0;
     for (int i = 0; i < stack->capacity; ++i)
@@ -101,7 +107,7 @@ StackElem_t StackPop(stack_t *stack) {
 
     if (stack->size == 0) {
         ON_DEBUG(stackdump(stack));
-        ParseErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK);
         printerr(RED_COLOR "You cannot pop from empty stack\n\n" RESET_COLOR);
         return POIZON_VALUE;
     }

@@ -13,7 +13,7 @@
                                                         }
 
 
-enum OperCode { 
+enum OperCode { // в структуру
     PUSH_CODE  = 588,
     ADD_CODE   = 353,
     SUB_CODE   = 462,
@@ -31,12 +31,6 @@ enum OperCode {
     JB_CODE    = 516,
 };
 
-const int MaxOperationSize = 5;
-
-int CalcOperHash(const char* operation);
-
 StackErr_t assembler(const char* text_file, const char* commands_file);
-
-StackErr_t disassembler(const char* commands_file, const char* text_file);
 
 #endif

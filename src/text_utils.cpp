@@ -8,7 +8,7 @@ Text* TextCtor(const char* file_name) {
         return NULL;
     }
 
-    text->name = file_name;
+    text->file_name = file_name;
     
     input_data(text);
 
@@ -23,11 +23,11 @@ int get_file_size(const char* file_name) {
 }
 
 void input_data(Text* text) {
-    text->file_size = get_file_size(text->name);
+    text->file_size = get_file_size(text->file_name);
 
     text->buf = (char*)calloc(text->file_size, sizeof(char));
 
-    FILE* fp = fopen(text->name, "rb");
+    FILE* fp = fopen(text->file_name, "rb");
 
     int read_symbols = fread(text->buf, sizeof(char), text->file_size, fp);
 

@@ -16,7 +16,7 @@ struct processor_t {
 
     Text *code = NULL;
 
-    int *bytecode;
+    int *bytecode = {};
 
     int ic = 0;
 
@@ -25,11 +25,7 @@ struct processor_t {
     StackElem_t regs[RegsCount] = {0};
 };
 
-#ifdef DEBUG
-#define make_processor(code_file) ProcCtor(code_file, VarInfoCtor("processor", __FILE__, __FUNCTION__, __LINE__))
-#else
-#define make_processor(code_file) ProcCtor(code_file)
-#endif
+#define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", __FILE__, __FUNCTION__, __LINE__)))
 
 #define procdump(name) ProcessorDump(name, VarInfoCtor(#name, __FILE__, __FUNCTION__, __LINE__))
 
