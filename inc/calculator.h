@@ -3,7 +3,7 @@
 
 #include "stack.h"
 
-enum StackOper {
+enum ProcOper {
     VOID  =  0,
     PUSH  =  1,
     ADD   =  2,

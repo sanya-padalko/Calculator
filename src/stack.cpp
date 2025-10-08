@@ -47,7 +47,7 @@ stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo)) {
     return stack;
 }
 
-StackErr_t StackDtor(stack_t *stack) {
+CodeError_t StackDtor(stack_t *stack) {
     stackverify(stack);
     my_assert(code_error == NOTHING, code_error, code_error);
 
@@ -83,7 +83,7 @@ static int StackRealloc(stack_t *stack, ssize_t new_size) {
     return stack->capacity;
 }
 
-StackErr_t StackPush(stack_t *stack, StackElem_t new_value) {
+CodeError_t StackPush(stack_t *stack, StackElem_t new_value) {
     stackverify(stack);
     my_assert(code_error == NOTHING, code_error, code_error);
 
@@ -107,7 +107,7 @@ StackElem_t StackPop(stack_t *stack) {
 
     if (stack->size == 0) {
         ON_DEBUG(stackdump(stack));
-        PrintErr(EMPTY_STACK);
+        PrintErr(EMPTY_STACK, line_info);
         printerr(RED_COLOR "You cannot pop from empty stack\n\n" RESET_COLOR);
         return POIZON_VALUE;
     }
@@ -130,7 +130,7 @@ StackElem_t StackPop(stack_t *stack) {
     return last;
 }
 
-StackErr_t StackVerify(stack_t* stack) {
+CodeError_t StackVerify(stack_t* stack) {
     if (!stack) 
         return NULLPTR;
 
