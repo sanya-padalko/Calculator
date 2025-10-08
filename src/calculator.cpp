@@ -5,13 +5,9 @@ static StackElem_t pow(StackElem_t a, StackElem_t b);
 
 CodeError_t StackAdd(stack_t *stack) {
     stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 2) {
-        printerr(RED_COLOR "Not enough numbers for addition\n" RESET_COLOR);
-        return SIZE_ERR;
-    }
+    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
 
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
@@ -26,13 +22,9 @@ CodeError_t StackAdd(stack_t *stack) {
 
 CodeError_t StackSub(stack_t *stack) {
     stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 2) {
-        printerr(RED_COLOR "Not enough numbers for subtraction\n" RESET_COLOR);
-        return SIZE_ERR;
-    }
+    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
 
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
@@ -47,13 +39,9 @@ CodeError_t StackSub(stack_t *stack) {
 
 CodeError_t StackMul(stack_t *stack) {
     stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 2) {
-        printerr(RED_COLOR "Not enough numbers for multiplication\n" RESET_COLOR);
-        return SIZE_ERR;
-    }
+    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
 
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
@@ -68,13 +56,9 @@ CodeError_t StackMul(stack_t *stack) {
 
 CodeError_t StackDiv(stack_t *stack) {
     stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 2) {
-        printerr(RED_COLOR "Not enough numbers for division\n" RESET_COLOR);
-        return SIZE_ERR;
-    }
+    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
 
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
@@ -93,10 +77,7 @@ CodeError_t StackDiv(stack_t *stack) {
 }
 
 static StackElem_t calc_sqrt(StackElem_t value) {
-    if (value < 0) {
-        printerr(RED_COLOR "Trying to take the root of a negative number\n" RESET_COLOR);
-        return -1;
-    }
+    my_assert(value >= 0, VALUE_ERR, VALUE_ERR);
 
     StackElem_t l = 0, r = value + 1;
 
@@ -114,13 +95,9 @@ static StackElem_t calc_sqrt(StackElem_t value) {
 
 CodeError_t StackSqrt(stack_t *stack) {
     stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size == 0) {
-        PrintErr(EMPTY_STACK, line_info);
-        return EMPTY_STACK;
-    }
+    my_assert(stack->size, EMPTY_STACK, EMPTY_STACK);
 
     StackElem_t a = StackPop(stack);
 
@@ -161,10 +138,7 @@ CodeError_t StackPow(stack_t *stack) {
     StackElem_t a = StackPop(stack);
     StackElem_t b = StackPop(stack);
 
-    if (a < 0) {
-        printerr(RED_COLOR "You can't raising number in negative power\n" RESET_COLOR);
-        return VALUE_ERR;
-    }
+    my_assert(a >= 0, VALUE_ERR, VALUE_ERR);
 
     CodeError_t error_code = StackPush(stack, pow(b, a));
 
@@ -176,13 +150,9 @@ CodeError_t StackPow(stack_t *stack) {
 
 CodeError_t StackOut(stack_t *stack) {
     stackverify(stack);
-    if (code_error)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 1) {
-        PrintErr(EMPTY_STACK, line_info);
-        return EMPTY_STACK;
-    }
+    my_assert(stack->size > 0, EMPTY_STACK, EMPTY_STACK);
 
     StackElem_t a = StackPop(stack);
 
@@ -198,13 +168,9 @@ CodeError_t StackOut(stack_t *stack) {
 
 CodeError_t StackTop(stack_t *stack) {
     stackverify(stack);
-    if (code_error)
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 1) {
-        PrintErr(EMPTY_STACK, line_info);
-        return EMPTY_STACK;
-    }
+    my_assert(stack->size > 0, EMPTY_STACK, EMPTY_STACK);
 
     StackElem_t a = stack->data[stack->size - 1];
 
@@ -213,16 +179,12 @@ CodeError_t StackTop(stack_t *stack) {
 
 CodeError_t StackIn(stack_t *stack) {
     stackverify(stack);
-    if (code_error) 
-        return code_error;
+    my_assert(code_error == NOTHING, code_error, code_error);
 
     StackElem_t value = 0;
     int scanf_check = scanf("%d", &value);
 
-    if (scanf_check != 1) {
-        printerr(RED_COLOR "Incorrect number input\n" RESET_COLOR);
-        return VALUE_ERR;
-    }
+    my_assert(scanf_check == 1, INPUT_ERR, INPUT_ERR);
 
     CodeError_t error_code = StackPush(stack, value);
 

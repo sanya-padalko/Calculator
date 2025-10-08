@@ -10,10 +10,10 @@ void PrintErr(CodeError_t error_type, const char* file_name, const char* func_na
             printerr(RED_COLOR "Pointer went equal NULL\n");
             break;
         case SIZE_ERR:
-            printerr(RED_COLOR "Stack has unavailable size\n");
+            printerr(RED_COLOR "Unavailable size\n");
             break;
         case CAPACITY_ERR:
-            printerr(RED_COLOR "Stack has unavailable capactiy\n");
+            printerr(RED_COLOR "Unavailable capactiy\n");
             break;
         case EMPTY_STACK:
             printerr(RED_COLOR "Trying to work with empty stack\n");
@@ -25,16 +25,16 @@ void PrintErr(CodeError_t error_type, const char* file_name, const char* func_na
             printerr(RED_COLOR "Realloc went wrong\n");
             break;
         case HASH_ERR:
-            printerr(RED_COLOR "Hash of stack went wrong. The inside of the stack has been changed\n");
+            printerr(RED_COLOR "Hash went wrong\n");
             break;
         case CAP_SIZE_ERR:
-            printerr(RED_COLOR "Size become greater than capacity in stack\n");
+            printerr(RED_COLOR "Size become greater than capacity\n");
             break;
         case VALUE_ERR:
-            printerr(RED_COLOR "Trying to work with POIZON value\n");
+            printerr(RED_COLOR "Trying to work with wrong value\n");
             break;
         case OPERATION_ERR:
-            printerr(RED_COLOR "Unknown operation to stack\n");
+            printerr(RED_COLOR "Unknown operation\n");
             break;
         case FILE_ERR:
             printerr(RED_COLOR "Working with file went wrong\n");
@@ -53,6 +53,9 @@ void PrintErr(CodeError_t error_type, const char* file_name, const char* func_na
             break;
         case REG_IND_ERR:
             printerr(RED_COLOR "Unavailable index of register\n");
+            break;
+        case TERM_ERR:
+            printerr(RED_COLOR "Termination command is missing\n");
             break;
         default:
             printerr(YELLOW_COLOR "Unknown error\n");
