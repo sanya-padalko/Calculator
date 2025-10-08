@@ -30,35 +30,16 @@ enum CodeError_t {
     HASH_ERR       =   7,
     CAP_SIZE_ERR   =   8,
     VALUE_ERR      =   9,
-    OPERATION_ERR  =  10,  
-    FILE_ERR       =  11,  
-    STACK_ERR      =  12,
-    CODE_ERR       =  13,
-    NULL_ERR       =  14,
-    CMD_IND_ERR    =  15,
-    INPUT_ERR      =  16,
-    REG_IND_ERR    =  17,
+    OPERATION_ERR  =   10,  
+    FILE_ERR       =   11,  
+    STACK_ERR      =   12,
+    CODE_ERR       =   13,
+    CMD_IND_ERR    =   15,
+    INPUT_ERR      =   16,
+    REG_IND_ERR    =   17,
+    TERM_ERR       =   18,
     ERROR_COUNTS
 };
-
-const char* const CodeErrorMas[] = {"NOTHING", 
-                                    "NULLPTR", 
-                                    "SIZE_ERR",
-                                    "EMPTY_STACK",
-                                    "CAPACITY_ERR",
-                                    "CANARY_ERR",
-                                    "REALLOC_ERR",
-                                    "HASH_ERR",
-                                    "CAP_SIZE_ERR",
-                                    "VALUE_ERR",
-                                    "OPERATION_ERR",
-                                    "FILE_ERR",
-                                    "STACK_ERR", 
-                                    "CODE_ERR", 
-                                    "NULL_ERR", 
-                                    "CMD_IND_ERR", 
-                                    "INPUT_ERR", 
-                                    "REG_IND_ERR"};
 
 void PrintErr(CodeError_t error_type, const char* file_name, const char* func_name, const int line_ind);
 
