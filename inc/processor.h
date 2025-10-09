@@ -24,6 +24,30 @@ struct processor_t {
     StackElem_t regs[RegsCount] = {0};
 };
 
+enum ProcOper {
+    VOID  =  0,
+    PUSH  =  1,
+    ADD   =  2,
+    SUB   =  3,
+    MUL   =  4,
+    DIV   =  5,
+    SQRT  =  6,
+    POW   =  7,
+    OUT   =  8,
+    HLT   =  9,
+    TOP   = 10,
+    IN    = 11,
+    PUSHR = 12, 
+    POPR  = 13,
+    JMP   = 14,
+    JB    = 15,
+    JBE   = 16,
+    JA    = 17,
+    JAE   = 18,
+    JE    = 19,
+    JNE   = 20,
+};
+
 #define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))
 
 #define procdump(name) ProcDump(name, VarInfoCtor(#name, line_info))

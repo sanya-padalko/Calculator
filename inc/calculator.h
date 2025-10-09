@@ -3,25 +3,6 @@
 
 #include "stack.h"
 
-enum ProcOper {
-    VOID  =  0,
-    PUSH  =  1,
-    ADD   =  2,
-    SUB   =  3,
-    MUL   =  4,
-    DIV   =  5,
-    SQRT  =  6,
-    POW   =  7,
-    OUT   =  8,
-    HLT   =  9,
-    TOP   = 10,
-    IN    = 11,
-    PUSHR = 12, 
-    POPR  = 13,
-    JMP   = 14,
-    JB    = 15,
-};
-
 CodeError_t StackAdd(stack_t *stack);
 
 CodeError_t StackSub(stack_t *stack);
