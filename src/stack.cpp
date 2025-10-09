@@ -1,12 +1,12 @@
 #include "stack.h"
 
 unsigned long calc_hash(stack_t *stack);
-
-void fill_poizon(stack_t *stack, int left, int right);
-
+CodeError_t fill_poizon(stack_t *stack, int left, int right);
 static int StackRealloc(stack_t *stack, ssize_t new_size);
 
 unsigned long calc_hash(stack_t *stack) {
+    my_assert(stack, NULLPTR, -1);
+    
     unsigned long hash = 0;
     for (int i = 0; i < stack->capacity; ++i)
         hash = (hash + (i + 1) * stack->data[i]) % mod;
@@ -14,17 +14,21 @@ unsigned long calc_hash(stack_t *stack) {
     return hash;
 }
 
-void fill_poizon(stack_t *stack, int left, int right) {
+CodeError_t fill_poizon(stack_t *stack, int left, int right) {
+    my_assert(stack, NULLPTR, NULLPTR);
+    my_assert(0 <= left && left <= right && right <= stack->capacity, SIZE_ERR, SIZE_ERR);
+
     for (int i = left; i < right; ++i) {
         stack->data[i] = POIZON_VALUE;
     }
+
+    return NOTHING;
 }
 
 stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo)) {
     ON_DEBUG(PrintVarInfo(varinfo));
 
     stack_t *stack = (stack_t*)calloc(1, sizeof(stack_t));
-
     my_assert(stack, NULLPTR, NULL);
 
     my_assert(0 <= capacity && capacity <= MaxCapacity, CAPACITY_ERR, NULL);
@@ -33,14 +37,14 @@ stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo)) {
     stack->capacity = capacity;
 
     stack->data = (StackElem_t*)calloc(stack->capacity + 2, sizeof(StackElem_t));
-    
     my_assert(stack->data, NULLPTR, NULL);
 
     stack->data[0] = CANARY_LEFT;
     ++stack->data;
     stack->data[stack->capacity] = CANARY_RIGHT;
 
-    fill_poizon(stack, 0, stack->capacity);
+    CodeError_t error_code = fill_poizon(stack, 0, stack->capacity);
+    my_assert(error_code == NOTHING, error_code, NULL);
 
     stack->hash = calc_hash(stack);
 
@@ -74,11 +78,12 @@ static int StackRealloc(stack_t *stack, ssize_t new_size) {
     ++stack->data;
     stack->capacity = new_size;
 
-    fill_poizon(stack, stack->size, stack->capacity);
+    CodeError_t error_code = fill_poizon(stack, stack->size, stack->capacity);
+    my_assert(error_code == NOTHING, error_code, BadSize);
     
     stack->data[stack->capacity] = CANARY_RIGHT;
 
-    stack->hash = calc_hash(stack);
+    stack->hash = calc_hash(stack);         
 
     return stack->capacity;
 }
