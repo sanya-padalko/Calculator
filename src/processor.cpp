@@ -94,7 +94,6 @@ CodeError_t ProcJmp(processor_t* proc) {
 #define procj(expr)     a = StackPop(proc->stack); \
                         b = StackPop(proc->stack); \
                         if (b expr a) { \
-                            printerr("%d %d\n", a, b); \
                             proc->ic = proc->bytecode[proc->ic]; \
                         }
 
@@ -229,6 +228,21 @@ CodeError_t execution(processor_t *proc) {
                 break;
             case JB:
                 procj(<);
+                break;
+            case JBE:
+                procj(<=);
+                break;
+            case JA:
+                procj(>);
+                break;
+            case JAE:
+                procj(>=);
+                break;
+            case JE:
+                procj(==);
+                break;
+            case JNE:
+                procj(!=);
                 break;
             case ADD:
                 error_code = StackAdd(proc->stack);

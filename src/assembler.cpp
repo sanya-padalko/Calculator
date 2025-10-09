@@ -9,7 +9,7 @@ int CalcOperHash(char* operation) {
 
     int operation_code = 0;
     for (int c = 0; c < MaxOperationSize; ++c) {
-        operation_code = ((operation_code * 13) + operation[c]) % 1000;
+        operation_code = ((operation_code * 33) + operation[c]) % 1000;
         operation[c] = 0;
     }
 
@@ -120,6 +120,41 @@ CodeError_t assembler(const char* text_file, const char* commands_file) {
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(JB, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
+                break;
+            case JBE_CODE:
+                error_code = ParseNumber(&new_ic, &buf_ptr);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                
+                PrintNumber(JB, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
+                break;
+            case JA_CODE:
+                error_code = ParseNumber(&new_ic, &buf_ptr);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                
+                PrintNumber(JA, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
+                break;
+            case JAE_CODE:
+                error_code = ParseNumber(&new_ic, &buf_ptr);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                
+                PrintNumber(JAE, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
+                break;
+            case JE_CODE:
+                error_code = ParseNumber(&new_ic, &buf_ptr);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                
+                PrintNumber(JE, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
+                break;
+            case JNE_CODE:
+                error_code = ParseNumber(&new_ic, &buf_ptr);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                
+                PrintNumber(JNE, &ex_ptr);
                 PrintNumber(new_ic, &ex_ptr);
                 break;
             case PUSHR_CODE:
