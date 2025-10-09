@@ -52,6 +52,28 @@ CodeError_t ParseString(const char* str, char** buf) {
     return NOTHING;
 }
 
+CodeError_t PrintNumber(const int value, char** buf) {
+    my_assert(buf, NULLPTR, NULLPTR);
+    my_assert(*buf, NULLPTR, NULLPTR);
+
+    sprintf(*buf, "%d ", value);
+    while (**buf != '\0')
+        ++*buf;
+
+    return NOTHING;
+}
+
+CodeError_t WriteToExFile(const char* file_name, const char* buf, int s_count) {
+    my_assert(file_name, NULLPTR, NULLPTR);
+    my_assert(buf, NULLPTR, NULLPTR);
+
+    FILE* ex_file = fopen(file_name, "w");
+    my_assert(ex_file, FILE_ERR, FILE_ERR);
+
+    fwrite(buf, sizeof(char), s_count, ex_file);
+    fclose(ex_file);
+}
+
 CodeError_t assembler(const char* text_file, const char* commands_file) {
     my_assert(text_file, NULLPTR, NULLPTR);
     my_assert(commands_file, NULLPTR, NULLPTR);
@@ -59,11 +81,14 @@ CodeError_t assembler(const char* text_file, const char* commands_file) {
     Text* start = ReadCodeFile(text_file);
     my_assert(start, NULLPTR, NULLPTR);
 
-    FILE* ex_file = fopen(commands_file, "w");
-    my_assert(ex_file, FILE_ERR, FILE_ERR);
+    char* exec_file = (char*)calloc(start->file_size, sizeof(char));
+    my_assert(exec_file, NULLPTR, NULLPTR);
 
     char operation[MaxOperationSize + 1] = {};
+
     char* buf_ptr = start->buf;
+    char* ex_ptr  = exec_file;
+
     CodeError_t error_code = NOTHING;
     bool is_end = false;
 
@@ -72,7 +97,6 @@ CodeError_t assembler(const char* text_file, const char* commands_file) {
         my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
 
         StackElem_t value = 0;
-        int correct = 0;
         char reg_type[3] = {0};
         int new_ic = 0;
         
@@ -81,78 +105,82 @@ CodeError_t assembler(const char* text_file, const char* commands_file) {
                 error_code = ParseNumber(&value, &buf_ptr);
                 my_assert(error_code == NOTHING, error_code, error_code);
 
-                fprintf(ex_file, "%d %d ", PUSH, value);
+                PrintNumber(PUSH, &ex_ptr);
+                PrintNumber(value, &ex_ptr);
                 break;
             case JMP_CODE:
                 error_code = ParseNumber(&new_ic, &buf_ptr);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                fprintf(ex_file, "%d %d ", JMP, new_ic);
+                PrintNumber(JMP, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
                 break;
             case JB_CODE:
                 error_code = ParseNumber(&new_ic, &buf_ptr);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                fprintf(ex_file, "%d %d ", JB, new_ic);
+                PrintNumber(JB, &ex_ptr);
+                PrintNumber(new_ic, &ex_ptr);
                 break;
             case PUSHR_CODE:
                 error_code = ParseString(reg_type, &buf_ptr);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
 
-                fprintf(ex_file, "%d %d ", PUSHR, (reg_type[1] - 'A'));
+                PrintNumber(PUSHR, &ex_ptr);
+                PrintNumber(reg_type[1] - 'A', &ex_ptr);
                 break;
             case POPR_CODE:
                 error_code = ParseString(reg_type, &buf_ptr);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
                 
-                fprintf(ex_file, "%d %d ", POPR, (reg_type[1] - 'A'));
+                PrintNumber(POPR, &ex_ptr);
+                PrintNumber(reg_type[1] - 'A', &ex_ptr);
                 break;
             case ADD_CODE:
-                fprintf(ex_file, "%d ", ADD);
+                PrintNumber(ADD, &ex_ptr);
                 break;
             case SUB_CODE:
-                fprintf(ex_file, "%d ", SUB);
+                PrintNumber(SUB, &ex_ptr);
                 break;
             case MUL_CODE:
-                fprintf(ex_file, "%d ", MUL);
+                PrintNumber(MUL, &ex_ptr);
                 break;
             case DIV_CODE:
-                fprintf(ex_file, "%d ", DIV);
+                PrintNumber(DIV, &ex_ptr);
                 break;
             case SQRT_CODE:
-                fprintf(ex_file, "%d ", SQRT);
+                PrintNumber(SQRT, &ex_ptr);
                 break;
             case POW_CODE:
-                fprintf(ex_file, "%d ", POW);
+                PrintNumber(POW, &ex_ptr);
                 break;
             case OUT_CODE:
-                fprintf(ex_file, "%d ", OUT);
+                PrintNumber(OUT, &ex_ptr);
                 break;
             case IN_CODE:
-                fprintf(ex_file, "%d ", IN);
+                PrintNumber(IN, &ex_ptr);
                 break;
             case TOP_CODE:
-                fprintf(ex_file, "%d ", TOP);
+                PrintNumber(TOP, &ex_ptr);
                 break;
             case HLT_CODE:
-                fprintf(ex_file, "%d ", HLT);
+                PrintNumber(HLT, &ex_ptr);
                 is_end = true;
                 break;
             default:
                 printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
-                fclose(ex_file);
                 return OPERATION_ERR;
         }
 
         if (is_end)
             break;
     }
-
-    fclose(ex_file);
     
     my_assert(is_end, TERM_ERR, TERM_ERR);
+
+    WriteToExFile(commands_file, exec_file, ex_ptr - exec_file);
 
     return error_code;
 }
