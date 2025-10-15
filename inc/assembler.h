@@ -7,8 +7,21 @@
 #include "calculator.h"
 #include "processor.h"
 
+struct assembler_t {
+    const char* text_file = NULL;
+    const char* commands_file = NULL;
+
+    Text* program = NULL;
+
+    char* ex_ptr = NULL;
+
+    int ic = 0;
+    int labels[10] = {};
+};
+
 enum OperCode {
     PUSH_CODE  =  88,
+    POP_CODE   = 823,
     ADD_CODE   = 633,
     SUB_CODE   = 962,
     MUL_CODE   = 326,
@@ -30,6 +43,6 @@ enum OperCode {
     HLT_CODE   =   0
 };
 
-CodeError_t assembler(const char* text_file, const char* commands_file);
+CodeError_t assembler(assembler_t* assem);
 
 #endif
