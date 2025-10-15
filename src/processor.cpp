@@ -93,9 +93,10 @@ CodeError_t ProcJmp(processor_t* proc) {
 
 #define procj(expr)     a = StackPop(proc->stack); \
                         b = StackPop(proc->stack); \
-                        if (b expr a) { \
+                        if (b expr a) \
                             proc->ic = proc->bytecode[proc->ic]; \
-                        }
+                        else \
+                            ++proc->ic; \
 
 void ProcDump(processor_t* proc, VarInfo varinfo) {
     printerr("\nProcDump called from %s: in function %s, line %d\n", varinfo.file_name, varinfo.func_name, varinfo.line_ind);
@@ -285,3 +286,5 @@ CodeError_t execution(processor_t *proc) {
 
     return NOTHING;
 }
+
+#undef procj
