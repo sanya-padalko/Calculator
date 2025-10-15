@@ -209,77 +209,116 @@ CodeError_t execution(processor_t *proc) {
 
     for (proc->ic = 0; proc->ic < proc->cmd_cnt;) {
         operation = proc->bytecode[proc->ic++];
-        StackElem_t value = 0;
         CodeError_t error_code = NOTHING;
 
         switch(operation) {
             case PUSH:
-                value = proc->bytecode[proc->ic++];
+            {
+                StackElem_t value = proc->bytecode[proc->ic++];
 
                 error_code = StackPush(proc->stack, value);
                 break;
+            }
             case PUSHR:
+            {
                 error_code = ProcPushReg(proc);
                 break;
+            }
             case POPR:
+            {
                 error_code = ProcPopReg(proc);
                 break;
+            }
             case JMP:
+            {
                 error_code = ProcJmp(proc);
                 break;
+            }
             case JB:
+            {
                 procj(<);
                 break;
+            }
             case JBE:
+            {
                 procj(<=);
                 break;
+            }
             case JA:
+            {
                 procj(>);
                 break;
+            }
             case JAE:
+            {
                 procj(>=);
                 break;
+            }
             case JE:
+            {
                 procj(==);
                 break;
+            }
             case JNE:
+            {
                 procj(!=);
                 break;
+            }
             case ADD:
+            {
                 error_code = StackAdd(proc->stack);
                 break;
+            }
             case SUB:
+            {
                 error_code = StackSub(proc->stack);
                 break;
+            }
             case MUL:
+            {
                 error_code = StackMul(proc->stack);
                 break;
+            }
             case DIV:
+            {
                 error_code = StackDiv(proc->stack);
                 break;
+            }
             case SQRT:
+            {
                 error_code = StackSqrt(proc->stack);
                 break;
+            }
             case POW:
+            {
                 error_code = StackPow(proc->stack);
                 break;
+            }
             case OUT:
+            {
                 error_code = StackOut(proc->stack);
                 break;
+            }
             case TOP:
+            {
                 error_code = StackTop(proc->stack);
                 break;
+            }
             case IN:
+            {
                 error_code = StackIn(proc->stack);
                 break;
+            }
             case HLT:
-                procdump(proc);
+            {
+                ON_DEBUG(procdump(proc));
                 return NOTHING;
                 break;
+            }
         }
         
         if (error_code != NOTHING) {
-            procdump(proc);
+            ON_DEBUG(procdump(proc));
             return error_code;
         }
     }
