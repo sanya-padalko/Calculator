@@ -4,10 +4,10 @@ const int MaxOperationSize = 5;
 
 int CalcOperHash(char* operation);
 CodeError_t ReadCodeFile(assembler_t* assem);
-CodeError_t ParseNumber(const int* value, char** buf);
-CodeError_t ParseString(const char* str, char** buf, int* labels, int* ic);
-CodeError_t PrintNumber(const int value, char** buf);
-CodeError_t WriteToExFile(const char* file_name, const char* buf, int s_count);
+CodeError_t ParseNumber(assembler_t* assem, const int* value);
+CodeError_t ParseString(assembler_t* assem, const char* str);
+CodeError_t PrintNumber(assembler_t* assem, const int value);
+CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
 
 int CalcOperHash(char* operation) {
     my_assert(operation, NULLPTR, -1);
@@ -33,56 +33,52 @@ CodeError_t ReadCodeFile(assembler_t* assem) {
     return NOTHING;
 }
 
-CodeError_t ParseNumber(const int* value, char** buf) {
+CodeError_t ParseNumber(assembler_t* assem, const int* value) {
     my_assert(value, NULLPTR, NULLPTR);
-    my_assert(buf, NULLPTR, NULLPTR);
-    my_assert(*buf, NULLPTR, NULLPTR);
+    my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols = 0;
-    int correct = sscanf(*buf, "%d%n", value, &read_symbols);
+    int correct = sscanf(assem->program->buf, "%d%n", value, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
-    *buf += read_symbols;
+    assem->program->buf += read_symbols;
 
     return NOTHING;
 }
 
-CodeError_t ParseString(const char* str, char** buf, int* labels, int* ic) {
+CodeError_t ParseString(assembler_t* assem, const char* str) {
     my_assert(str, NULLPTR, NULLPTR);
-    my_assert(buf, NULLPTR, NULLPTR);
-    my_assert(*buf, NULLPTR, NULLPTR);
-    my_assert(labels, NULLPTR, NULLPTR);
+    my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols = 0;
-    int correct = sscanf(*buf, "%s%n", str, &read_symbols);
+    int correct = sscanf(assem->program->buf, "%s%n", str, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
 
     if (str[0] == ':')
-        labels[str[1] - '0'] = (*ic)--;
+        assem->labels[str[1] - '0'] = assem->ic--;
 
-    *buf += read_symbols;
-
-    return NOTHING;
-}
-
-CodeError_t PrintNumber(const int value, char** buf) {
-    my_assert(buf, NULLPTR, NULLPTR);
-    my_assert(*buf, NULLPTR, NULLPTR);
-
-    sprintf(*buf, "%d ", value);
-    while (**buf != '\0')
-        ++*buf;
+    assem->program->buf += read_symbols;
 
     return NOTHING;
 }
 
-CodeError_t WriteToExFile(const char* file_name, const char* buf, int s_count) {
-    my_assert(file_name, NULLPTR, NULLPTR);
+CodeError_t PrintNumber(assembler_t* assem, const int value) {
+    my_assert(assem, NULLPTR, NULLPTR);
+
+    sprintf(assem->ex_ptr, "%d ", value);
+    while (*assem->ex_ptr != '\0')
+        ++assem->ex_ptr;
+
+    return NOTHING;
+}
+
+CodeError_t WriteToExFile(assembler_t* assem, const char* buf) {
+    my_assert(assem, NULLPTR, NULLPTR);
     my_assert(buf, NULLPTR, NULLPTR);
 
-    FILE* ex_file = fopen(file_name, "w");
+    FILE* ex_file = fopen(assem->commands_file, "w");
     my_assert(ex_file, FILE_ERR, FILE_ERR);
 
-    fwrite(buf, sizeof(char), s_count, ex_file);
+    fwrite(buf, sizeof(char), assem->ex_ptr - buf, ex_file);
     fclose(ex_file);
 }
 
@@ -93,7 +89,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
     assem->ic = 0;
     bool is_end = false;
 
-    while (ParseString(operation, &assem->program->buf, assem->labels, &assem->ic) == NOTHING) {
+    while (ParseString(assem, operation) == NOTHING) {
         ++assem->ic;
         if (operation[0] == ':')
             continue;
@@ -107,119 +103,167 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             }
             continue;
         }
-
-        StackElem_t value = 0;
-        char reg_type[3] = {0};
-        int new_ic = 0;
         
         switch (operation_code) {
             case PUSH_CODE:
-                error_code = ParseNumber(&value, &assem->program->buf);
+            {
+                StackElem_t value = 0;
+                error_code = ParseNumber(assem, &value);
                 my_assert(error_code == NOTHING, error_code, error_code);
 
-                PrintNumber(PUSH, &assem->ex_ptr);
-                PrintNumber(value, &assem->ex_ptr);
+                PrintNumber(assem, PUSH);
+                PrintNumber(assem, value);
                 break;
+            }
             case JMP_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JMP, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JMP);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JB_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JB, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JB);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JBE_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JB, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JB);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JA_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JA, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JA);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JAE_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JAE, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JAE);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JE_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JE, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JE);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case JNE_CODE:
-                error_code = ParseNumber(&new_ic, &assem->program->buf);
+            {
+                int new_ic = 0;
+                error_code = ParseNumber(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(JNE, &assem->ex_ptr);
-                PrintNumber(assem->labels[new_ic], &assem->ex_ptr);
+                PrintNumber(assem, JNE);
+                PrintNumber(assem, assem->labels[new_ic]);
                 break;
+            }
             case PUSHR_CODE:
-                error_code = ParseString(reg_type, &assem->program->buf, assem->labels, &assem->ic);
+            {
+                char reg_type[3] = {0};
+                error_code = ParseString(assem, reg_type);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
 
-                PrintNumber(PUSHR, &assem->ex_ptr);
-                PrintNumber(reg_type[1] - 'A', &assem->ex_ptr);
+                PrintNumber(assem, PUSHR);
+                PrintNumber(assem, reg_type[1] - 'A');
                 break;
+            }
             case POPR_CODE:
-                error_code = ParseString(reg_type, &assem->program->buf, assem->labels, &assem->ic);
+            {
+                char reg_type[3] = {0};
+                error_code = ParseString(assem, reg_type);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
                 
-                PrintNumber(POPR, &assem->ex_ptr);
-                PrintNumber(reg_type[1] - 'A', &assem->ex_ptr);
+                PrintNumber(assem, POPR);
+                PrintNumber(assem, reg_type[1] - 'A');
                 break;
+            }
             case ADD_CODE:
-                PrintNumber(ADD, &assem->ex_ptr);
+            {
+                PrintNumber(assem, ADD);
                 break;
+            }
             case SUB_CODE:
-                PrintNumber(SUB, &assem->ex_ptr);
+            {
+                PrintNumber(assem, SUB);
                 break;
+            }
             case MUL_CODE:
-                PrintNumber(MUL, &assem->ex_ptr);
+            {
+                PrintNumber(assem, MUL);
                 break;
+            }
             case DIV_CODE:
-                PrintNumber(DIV, &assem->ex_ptr);
+            {
+                PrintNumber(assem, DIV);
                 break;
+            }
             case SQRT_CODE:
-                PrintNumber(SQRT, &assem->ex_ptr);
+            {
+                PrintNumber(assem, SQRT);
                 break;
+            }
             case POW_CODE:
-                PrintNumber(POW, &assem->ex_ptr);
+            {
+                PrintNumber(assem, POW);
                 break;
+            }
             case OUT_CODE:
-                PrintNumber(OUT, &assem->ex_ptr);
+            {
+                PrintNumber(assem, OUT);
                 break;
+            }
             case IN_CODE:
-                PrintNumber(IN, &assem->ex_ptr);
+            {
+                PrintNumber(assem, IN);
                 break;
+            }
             case TOP_CODE:
-                PrintNumber(TOP, &assem->ex_ptr);
+            {
+                PrintNumber(assem, TOP);
                 break;
+            }
             case HLT_CODE:
-                PrintNumber(HLT, &assem->ex_ptr);
+            {
+                PrintNumber(assem, HLT);
                 is_end = true;
                 break;
+            }
             default:
+            {
                 printerr("%d\n", operation_code);
                 printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
                 return OPERATION_ERR;
+            }
         }
 
         if (is_end)
@@ -251,7 +295,7 @@ CodeError_t assembler(assembler_t* assem) {
 
     PassingCode(assem, false);
 
-    WriteToExFile(assem->commands_file, exec_file, assem->ex_ptr - exec_file);
+    WriteToExFile(assem, exec_file);
 
     return error_code;
 }
