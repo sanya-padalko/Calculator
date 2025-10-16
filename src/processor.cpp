@@ -12,6 +12,9 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
     proc->stack = make_stack(BaseStackSize);
     my_assert(proc->stack, NULLPTR, NULL);
 
+    proc->stack_ret = make_stack(BaseStackSize);
+    my_assert(proc->stack_ret, NULLPTR, NULL);
+
     proc->code = TextCtor(code_file);
     my_assert(proc->code, NULLPTR, NULL);
 

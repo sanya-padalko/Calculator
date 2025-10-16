@@ -12,6 +12,7 @@ const size_t RegsCount = 4;
 
 struct processor_t {
     stack_t *stack = NULL;
+    stack_t *stack_ret = NULL;
 
     Text *code = NULL;
 
@@ -46,6 +47,8 @@ enum ProcOper {
     JAE   = 18,
     JE    = 19,
     JNE   = 20,
+    CALL  = 21,
+    RET   = 22,
 };
 
 #define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))
