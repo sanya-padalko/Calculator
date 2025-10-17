@@ -44,6 +44,8 @@ enum OperCode {
     JNE_CODE   = 381,
     CALL_CODE  = 884,
     RET_CODE   = 651,
+    PUSHM_CODE = 165,
+    POPM_CODE  = 364,
     HLT_CODE   =   0
 };
 

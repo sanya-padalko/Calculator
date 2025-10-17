@@ -19,9 +19,9 @@ struct processor_t {
     int *bytecode = {};
 
     int ic = 0;
-
     int cmd_cnt = 0;
-
+    
+    int ram[100];
     StackElem_t regs[RegsCount] = {0};
 };
 
@@ -49,6 +49,8 @@ enum ProcOper {
     JNE   = 20,
     CALL  = 21,
     RET   = 22,
+    PUSHM = 81,
+    POPM  = 82,
 };
 
 #define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))

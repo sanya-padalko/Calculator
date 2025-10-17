@@ -85,6 +85,29 @@ CodeError_t ProcPopReg(processor_t* proc) {
     return NOTHING;
 }
 
+CodeError_t ProcPushRam(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    int ram_ind = proc->regs[proc->bytecode[proc->ic++]];
+
+    code_error = StackPush(proc->stack, proc->ram[ram_ind]);
+
+    return code_error;
+}
+
+CodeError_t ProcPopRam(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    int ram_ind = proc->regs[proc->bytecode[proc->ic++]];
+    StackElem_t value = StackPop(proc->stack);
+
+    proc->ram[ram_ind] = value;
+
+    return code_error;
+}
+
 CodeError_t ProcJmp(processor_t* proc) {
     CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
@@ -277,6 +300,16 @@ CodeError_t execution(processor_t *proc) {
             {
                 if (proc->stack_ret->size)
                     proc->ic = StackPop(proc->stack_ret);
+                break;
+            }
+            case PUSHM:
+            {
+                ProcPushRam(proc);
+                break;
+            }
+            case POPM:
+            {
+                ProcPopRam(proc);
                 break;
             }
             case ADD:

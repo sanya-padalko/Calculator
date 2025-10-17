@@ -5,6 +5,7 @@ const int MaxOperationSize = 5;
 int CalcOperHash(char* operation);
 CodeError_t ReadCodeFile(assembler_t* assem);
 CodeError_t ParseNumber(assembler_t* assem, const int* value);
+CodeError_t ParseReg(assembler_t* assem, const char* str);
 CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num);
 CodeError_t PrintNumber(assembler_t* assem, const int value);
 CodeError_t ParseLabel(assembler_t* assem, const int* value);
@@ -21,6 +22,8 @@ int CalcOperHash(char* operation) {
 
     return operation_code;
 }
+
+#define CheckReg(reg) my_assert(reg[0] == 'R' && reg[2] == 'X' && ('A' <= reg[1] && reg[1] <= 'D'), REG_IND_ERR, REG_IND_ERR)
 
 CodeError_t ReadCodeFile(assembler_t* assem) {
     my_assert(assem, NULLPTR, NULLPTR);
@@ -55,6 +58,19 @@ CodeError_t ParseLabel(assembler_t* assem, const int* value) {
 
     int read_symbols;
     int correct = sscanf(assem->buf, " :%d%n", value, &read_symbols);
+    my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
+    assem->buf += read_symbols;
+    ++assem->ic;
+
+    return NOTHING;
+}
+
+CodeError_t ParseReg(assembler_t* assem, const char* str) {
+    my_assert(str, NULLPTR, NULLPTR);
+    my_assert(assem, NULLPTR, NULLPTR);
+
+    int read_symbols = 0;
+    int correct = sscanf(assem->buf, " [%s%n", str, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
     assem->buf += read_symbols;
     ++assem->ic;
@@ -215,7 +231,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 char reg_type[3] = {0};
                 error_code = ParseString(assem, reg_type, pass_num);
                 my_assert(error_code == NOTHING, error_code, error_code);
-                my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
+                CheckReg(reg_type);
 
                 PrintNumber(assem, PUSHR);
                 PrintNumber(assem, reg_type[1] - 'A');
@@ -226,9 +242,31 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 char reg_type[3] = {0};
                 error_code = ParseString(assem, reg_type, pass_num);
                 my_assert(error_code == NOTHING, error_code, error_code);
-                my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
-                
+                CheckReg(reg_type);
+
                 PrintNumber(assem, POPR);
+                PrintNumber(assem, reg_type[1] - 'A');
+                break;
+            }
+            case PUSHM_CODE:
+            {
+                char reg_type[3] = {0};
+                error_code = ParseReg(assem, reg_type);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                CheckReg(reg_type);
+
+                PrintNumber(assem, PUSHM);
+                PrintNumber(assem, reg_type[1] - 'A');
+                break;
+            }
+            case POPM_CODE:
+            {
+                char reg_type[3] = {0};
+                error_code = ParseReg(assem, reg_type);
+                my_assert(error_code == NOTHING, error_code, error_code);
+                CheckReg(reg_type);
+
+                PrintNumber(assem, POPM);
                 PrintNumber(assem, reg_type[1] - 'A');
                 break;
             }
