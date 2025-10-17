@@ -13,6 +13,8 @@ struct assembler_t {
 
     Text* program = NULL;
 
+    char* buf = NULL;
+
     char* ex_ptr = NULL;
 
     int ic = 0;

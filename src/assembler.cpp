@@ -28,6 +28,8 @@ CodeError_t ReadCodeFile(assembler_t* assem) {
     assem->program = TextCtor(assem->text_file);
     my_assert(assem->program, FILE_ERR, NULLPTR);
 
+    assem->buf = assem->program->buf;
+
     CodeError_t error_code = ReadFile(assem->program);
     my_assert(error_code == NOTHING, error_code, NULLPTR);
 
@@ -39,9 +41,9 @@ CodeError_t ParseNumber(assembler_t* assem, const int* value) {
     my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols = 0;
-    int correct = sscanf(assem->program->buf, "%d%n", value, &read_symbols);
+    int correct = sscanf(assem->buf, "%d%n", value, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
-    assem->program->buf += read_symbols;
+    assem->buf += read_symbols;
     ++assem->ic;
 
     return NOTHING;
@@ -52,9 +54,9 @@ CodeError_t ParseLabel(assembler_t* assem, const int* value) {
     my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols;
-    int correct = sscanf(assem->program->buf, " :%d%n", value, &read_symbols);
+    int correct = sscanf(assem->buf, " :%d%n", value, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
-    assem->program->buf += read_symbols;
+    assem->buf += read_symbols;
     ++assem->ic;
 
     return NOTHING;
@@ -65,13 +67,13 @@ CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols = 0;
-    int correct = sscanf(assem->program->buf, "%s%n", str, &read_symbols);
+    int correct = sscanf(assem->buf, "%s%n", str, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
 
     if (pass_num == 1 && str[0] == ':')
         assem->labels[str[1] - '0'] = assem->ic--;
 
-    assem->program->buf += read_symbols;
+    assem->buf += read_symbols;
     ++assem->ic;
 
     return NOTHING;
@@ -310,11 +312,10 @@ CodeError_t assembler(assembler_t* assem) {
     char operation[MaxOperationSize + 1] = {};
 
     char* exec_file = assem->ex_ptr;
-    char* buf_ptr = assem->program->buf;
 
     PassingCode(assem, 1);
 
-    assem->program->buf = buf_ptr;
+    assem->buf = assem->program->buf;
     assem->ex_ptr = exec_file;
 
     PassingCode(assem, 2);
