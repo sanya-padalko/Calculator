@@ -267,6 +267,18 @@ CodeError_t execution(processor_t *proc) {
                 procj(!=);
                 break;
             }
+            case CALL:
+            {
+                error_code = StackPush(proc->stack_ret, proc->ic + 1);
+                proc->ic = proc->bytecode[proc->ic];
+                break;
+            }
+            case RET:
+            {
+                if (proc->stack_ret->size)
+                    proc->ic = StackPop(proc->stack_ret);
+                break;
+            }
             case ADD:
             {
                 error_code = StackAdd(proc->stack);

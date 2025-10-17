@@ -5,8 +5,9 @@ const int MaxOperationSize = 5;
 int CalcOperHash(char* operation);
 CodeError_t ReadCodeFile(assembler_t* assem);
 CodeError_t ParseNumber(assembler_t* assem, const int* value);
-CodeError_t ParseString(assembler_t* assem, const char* str);
+CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num);
 CodeError_t PrintNumber(assembler_t* assem, const int value);
+CodeError_t ParseLabel(assembler_t* assem, const int* value);
 CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
 
 int CalcOperHash(char* operation) {
@@ -41,11 +42,25 @@ CodeError_t ParseNumber(assembler_t* assem, const int* value) {
     int correct = sscanf(assem->program->buf, "%d%n", value, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
     assem->program->buf += read_symbols;
+    ++assem->ic;
 
     return NOTHING;
 }
 
-CodeError_t ParseString(assembler_t* assem, const char* str) {
+CodeError_t ParseLabel(assembler_t* assem, const int* value) {
+    my_assert(value, NULLPTR, NULLPTR);
+    my_assert(assem, NULLPTR, NULLPTR);
+
+    int read_symbols;
+    int correct = sscanf(assem->program->buf, " :%d%n", value, &read_symbols);
+    my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
+    assem->program->buf += read_symbols;
+    ++assem->ic;
+
+    return NOTHING;
+}
+
+CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     my_assert(str, NULLPTR, NULLPTR);
     my_assert(assem, NULLPTR, NULLPTR);
 
@@ -53,10 +68,11 @@ CodeError_t ParseString(assembler_t* assem, const char* str) {
     int correct = sscanf(assem->program->buf, "%s%n", str, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
 
-    if (str[0] == ':')
+    if (pass_num == 1 && str[0] == ':')
         assem->labels[str[1] - '0'] = assem->ic--;
 
     assem->program->buf += read_symbols;
+    ++assem->ic;
 
     return NOTHING;
 }
@@ -89,20 +105,12 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
     assem->ic = 0;
     bool is_end = false;
 
-    while (ParseString(assem, operation) == NOTHING) {
-        ++assem->ic;
+    while (ParseString(assem, operation, pass_num) == NOTHING) {
         if (operation[0] == ':')
             continue;
 
         int operation_code = CalcOperHash(operation);
         my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
-
-        if (pass_num == 1) {
-            if (operation_code == HLT_CODE) {
-                break;
-            }
-            continue;
-        }
         
         switch (operation_code) {
             case PUSH_CODE:
@@ -118,7 +126,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JMP_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JMP);
@@ -128,7 +136,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JB_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JB);
@@ -138,17 +146,17 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JBE_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
-                PrintNumber(assem, JB);
+                PrintNumber(assem, JBE);
                 PrintNumber(assem, assem->labels[new_ic]);
                 break;
             }
             case JA_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JA);
@@ -158,7 +166,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JAE_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JAE);
@@ -168,7 +176,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JE_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JE);
@@ -178,17 +186,32 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case JNE_CODE:
             {
                 int new_ic = 0;
-                error_code = ParseNumber(assem, &new_ic);
+                error_code = ParseLabel(assem, &new_ic);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 
                 PrintNumber(assem, JNE);
                 PrintNumber(assem, assem->labels[new_ic]);
                 break;
             }
+            case CALL_CODE:
+            {
+                int new_ic = 0;
+                error_code = ParseLabel(assem, &new_ic);
+                my_assert(error_code == NOTHING, error_code, error_code);
+
+                PrintNumber(assem, CALL);
+                PrintNumber(assem, assem->labels[new_ic]);
+                break;
+            }
+            case RET_CODE:
+            {
+                PrintNumber(assem, RET);
+                break;
+            }
             case PUSHR_CODE:
             {
                 char reg_type[3] = {0};
-                error_code = ParseString(assem, reg_type);
+                error_code = ParseString(assem, reg_type, pass_num);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
 
@@ -199,7 +222,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
             case POPR_CODE:
             {
                 char reg_type[3] = {0};
-                error_code = ParseString(assem, reg_type);
+                error_code = ParseString(assem, reg_type, pass_num);
                 my_assert(error_code == NOTHING, error_code, error_code);
                 my_assert(reg_type[0] == 'R' && reg_type[2] == 'X' && ('A' <= reg_type[1] && reg_type[1] <= 'D'), REG_IND_ERR, REG_IND_ERR);
                 
@@ -289,11 +312,12 @@ CodeError_t assembler(assembler_t* assem) {
     char* exec_file = assem->ex_ptr;
     char* buf_ptr = assem->program->buf;
 
-    PassingCode(assem, true);
+    PassingCode(assem, 1);
 
     assem->program->buf = buf_ptr;
+    assem->ex_ptr = exec_file;
 
-    PassingCode(assem, false);
+    PassingCode(assem, 2);
 
     WriteToExFile(assem, exec_file);
 

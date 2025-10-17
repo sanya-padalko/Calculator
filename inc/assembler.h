@@ -40,6 +40,8 @@ enum OperCode {
     JAE_CODE   = 200,
     JE_CODE    = 807,
     JNE_CODE   = 381,
+    CALL_CODE  = 884,
+    RET_CODE   = 651,
     HLT_CODE   =   0
 };
 
