@@ -44,7 +44,7 @@ const operation_t operations[] = {
     {  .name = "JB"    ,  .hash = 996  ,  .code =    JB  ,  .args = 0 + Label   },
     {  .name = "JBE"   ,  .hash = 137  ,  .code =   JBE  ,  .args = 0 + Label   },
     {  .name = "JA"    ,  .hash =  59  ,  .code =    JA  ,  .args = 0 + Label   },
-    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE ,  .args = 0 + Label   },
+    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE  ,  .args = 0 + Label   },
     {  .name = "JE"    ,  .hash = 807  ,  .code =    JE  ,  .args = 0 + Label   },
     {  .name = "JNE"   ,  .hash = 381  ,  .code =   JNE  ,  .args = 0 + Label   },
     {  .name = "CALL"  ,  .hash = 884  ,  .code =  CALL  ,  .args = 0 + Label   },
