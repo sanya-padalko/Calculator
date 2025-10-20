@@ -21,36 +21,54 @@ struct processor_t {
     int ic = 0;
     int cmd_cnt = 0;
     
-    int ram[100];
+    int ram[30000] = {};
     StackElem_t regs[RegsCount] = {0};
 };
 
+const int MaxOperationSize = 5;
+
+struct operation_t {
+    const char* name;
+
+    int hash;
+
+    int code;
+
+    int args;
+};
+
 enum ProcOper {
-    VOID  =  0,
     PUSH  =  1,
-    ADD   =  2,
-    SUB   =  3,
-    MUL   =  4,
-    DIV   =  5,
-    SQRT  =  6,
-    POW   =  7,
-    OUT   =  8,
-    HLT   =  9,
-    TOP   = 10,
-    IN    = 11,
-    PUSHR = 42, 
-    POPR  = 43,
-    JMP   = 14,
-    JB    = 15,
-    JBE   = 16,
-    JA    = 17,
-    JAE   = 18,
-    JE    = 19,
-    JNE   = 20,
-    CALL  = 21,
-    RET   = 22,
-    PUSHM = 81,
-    POPM  = 82,
+    POP   =  2,
+    TOP   =  3,
+    IN    =  4,
+    OUT   =  5,
+
+    ADD   = 10,
+    SUB   = 11,
+    MUL   = 12,
+    DIV   = 13,
+    SQRT  = 14,
+    POW   = 15,
+
+    JMP   = 20,
+    JB    = 21,
+    JBE   = 22,
+    JA    = 23,
+    JAE   = 24,
+    JE    = 25,
+    JNE   = 26,
+    CALL  = 27,
+    RET   = 28,
+    
+    PUSHM = 30,
+    POPM  = 31,
+    DRAW  = 32,
+
+    PUSHR = 40, 
+    POPR  = 41,
+    
+    HLT   = 50
 };
 
 #define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))
@@ -60,19 +78,24 @@ enum ProcOper {
 const int err_regs_ind = 4;
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
-
 CodeError_t ProcDtor(processor_t* proc);
-
 CodeError_t StackPushReg(processor_t* proc);
-
 CodeError_t StackPopReg(processor_t* proc);
-
 void ProcDump(processor_t* proc, VarInfo varinfo);
 
+CodeError_t ProcStackPush(processor_t* proc);
+CodeError_t ProcStackPop(processor_t* proc);
+CodeError_t ProcCall(processor_t* proc);
+CodeError_t ProcRet(processor_t* proc);
+CodeError_t ProcPushReg(processor_t* proc);
+CodeError_t ProcPopReg(processor_t* proc);
+CodeError_t ProcPushRam(processor_t* proc);
+CodeError_t ProcPopRam(processor_t* proc);
+CodeError_t ProcJmp(processor_t* proc);
+CodeError_t ProcDraw(processor_t* proc);
+
 CodeError_t ParsingFile(processor_t *proc);
-
 CodeError_t LoadFile(processor_t *proc);
-
 CodeError_t execution(processor_t *proc);
 
 #endif

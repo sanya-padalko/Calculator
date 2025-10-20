@@ -29,8 +29,7 @@ CodeError_t ProcDtor(processor_t* proc) {
     CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    free(proc->stack);
-    proc->stack = NULL;
+    StackDtor(proc->stack);
     free(proc->code);
     proc->code = NULL;
     free(proc);
@@ -50,6 +49,119 @@ CodeError_t ProcVerify(processor_t* proc) {
     my_assert(proc->code, NULLPTR, NULLPTR);
 
     my_assert(0 <= proc->ic && proc->ic <= proc->cmd_cnt, CMD_IND_ERR, CMD_IND_ERR);
+
+    return NOTHING;
+}
+
+void ProcDump(processor_t* proc, VarInfo varinfo) {
+    printerr("\nProcDump called from %s: in function %s, line %d\n", varinfo.file_name, varinfo.func_name, varinfo.line_ind);
+    printerr("%s ", varinfo.object_name);
+
+    printerr("[");
+    if (proc == NULL) {
+        printerr(RED_COLOR "NULL" RESET_COLOR);
+        printerr("] ");
+        printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+    }
+    else {
+        printerr(GREEN_COLOR "%x" RESET_COLOR, proc);
+        printerr("]\n");
+    }
+
+    printerr("\t{\n");
+
+    if (proc) {
+        printerr("\tstack[");
+        if (proc->stack == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("] ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("] = { ");
+            stackverify(proc->stack);
+            if (code_error == NOTHING) {
+                for (size_t ind = 0; ind < proc->stack->size; ++ind)
+                    printerr(GREEN_COLOR "%d " RESET_COLOR, proc->stack->data[ind]);
+            }
+            else {
+                printerr(RED_COLOR " Some problem with stack of processor " RESET_COLOR);
+            }
+            printerr("};\n");
+        }
+
+        printerr("\n\tcode[");
+        if (proc->code == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("]; ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("];\n");
+        }
+
+        printerr("\n\tCount of commands = %d;\n", proc->cmd_cnt);
+
+        printerr("\n\tIndex of command = %d;\n", proc->ic);
+
+        printerr("\n\tregister[");
+        if (proc->regs == NULL) {
+            printerr(RED_COLOR "NULL" RESET_COLOR);
+            printerr("] ");
+            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
+        }
+        else {
+            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
+            printerr("] = { ");
+            for (size_t ind = 0; ind < RegsCount; ++ind)
+                printerr(GREEN_COLOR "%d " RESET_COLOR, proc->regs[ind]);
+
+            printerr("};\n");
+        }
+    }
+
+    printerr("\t}\n");
+}
+
+CodeError_t ProcStackPush(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+    
+    StackElem_t value = proc->bytecode[proc->ic++];
+
+    CodeError_t error_code = StackPush(proc->stack, value);
+
+    return error_code;
+}
+
+CodeError_t ProcStackPop(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    StackElem_t last = StackPop(proc->stack);
+    my_assert(last != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
+
+    return NOTHING;
+}
+
+CodeError_t ProcCall(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    CodeError_t error_code = StackPush(proc->stack_ret, proc->ic + 1);
+    proc->ic = proc->bytecode[proc->ic];
+
+    return error_code;
+}
+
+CodeError_t ProcRet(processor_t* proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    if (proc->stack_ret->size)
+        proc->ic = StackPop(proc->stack_ret);
 
     return NOTHING;
 }
@@ -124,76 +236,94 @@ CodeError_t ProcJmp(processor_t* proc) {
                         else \
                             ++proc->ic; \
 
-void ProcDump(processor_t* proc, VarInfo varinfo) {
-    printerr("\nProcDump called from %s: in function %s, line %d\n", varinfo.file_name, varinfo.func_name, varinfo.line_ind);
-    printerr("%s ", varinfo.object_name);
+CodeError_t Circle(processor_t* proc) {
+    int r = StackPop(proc->stack);
+    my_assert(r != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
 
-    printerr("[");
-    if (proc == NULL) {
-        printerr(RED_COLOR "NULL" RESET_COLOR);
-        printerr("] ");
-        printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
-    }
-    else {
-        printerr(GREEN_COLOR "%x" RESET_COLOR, proc);
-        printerr("]\n");
-    }
+    r *= r;
 
-    printerr("\t{\n");
+    for (int i = 0; i < 80; ++i)
+        for (int j = 0; j < 240; ++j)
+            proc->ram[i * 240 + j] = 0;
 
-    if (proc) {
-        printerr("\tstack[");
-        if (proc->stack == NULL) {
-            printerr(RED_COLOR "NULL" RESET_COLOR);
-            printerr("] ");
-            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
-        }
-        else {
-            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
-            printerr("] = { ");
-            stackverify(proc->stack);
-            if (code_error == NOTHING) {
-                for (size_t ind = 0; ind < proc->stack->size; ++ind)
-                    printerr(GREEN_COLOR "%d " RESET_COLOR, proc->stack->data[ind]);
+    for (int i = r % 2; i < 80; i += 2) {
+        for (int j = r % 2; j < 240; j += 2) {
+            int di = abs(40 - i);
+            int dj = abs(60 - j);
+            di *= di;
+            dj *= dj;
+            if (di * 3.9 + dj * 1.0 <= r * 3.9) {
+                proc->ram[i * 240 + j] = 1;
             }
             else {
-                printerr(RED_COLOR " Some problem with stack of processor " RESET_COLOR);
+                proc->ram[i * 240 + j] = 0;
             }
-            printerr("};\n");
-        }
-
-        printerr("\n\tcode[");
-        if (proc->code == NULL) {
-            printerr(RED_COLOR "NULL" RESET_COLOR);
-            printerr("]; ");
-            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
-        }
-        else {
-            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
-            printerr("];\n");
-        }
-
-        printerr("\n\tCount of commands = %d;\n", proc->cmd_cnt);
-
-        printerr("\n\tIndex of command = %d;\n", proc->ic);
-
-        printerr("\n\tregister[");
-        if (proc->regs == NULL) {
-            printerr(RED_COLOR "NULL" RESET_COLOR);
-            printerr("] ");
-            printerr(RED_COLOR "(!!!! BAD !!!!)\n" RESET_COLOR);
-        }
-        else {
-            printerr(GREEN_COLOR "%x" RESET_COLOR, proc->stack);
-            printerr("] = { ");
-            for (size_t ind = 0; ind < RegsCount; ++ind)
-                printerr(GREEN_COLOR "%d " RESET_COLOR, proc->regs[ind]);
-
-            printerr("};\n");
         }
     }
 
-    printerr("\t}\n");
+    return NOTHING;
+}
+
+CodeError_t ProcDraw(processor_t* proc) {
+    CodeError_t error_code = ProcVerify(proc);
+    my_assert(error_code == NOTHING, error_code, error_code);
+
+    
+    int r = StackPop(proc->stack);
+    my_assert(r != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
+
+    char s[19201] = {0};
+    int delta = -1;
+    int rmax = r;
+
+    while (true) {
+        r += delta;
+        if (r == 4 || r == rmax) {
+            delta *= -1;
+        }
+
+        system("cls");
+
+        StackPush(proc->stack, r);
+
+        error_code = Circle(proc);
+        my_assert(error_code == NOTHING, error_code, error_code);
+
+        char* it = s;
+        for (int i = 0; i < 19200; ++i) {
+            if (i % 240 > 120) {
+                if (i % 240 == 121)
+                    sprintf(it++, "\n");
+                continue;
+            }
+            if (proc->ram[i] == 1)
+                sprintf(it++, "W");
+            else
+                sprintf(it++, " ");
+        }
+    
+        if (r % 5 == 0) {
+            int p = rand() % 3;
+            switch (p) {
+                case 0:
+                    printf(RED_COLOR);
+                    break;
+                case 1:
+                    printf(GREEN_COLOR);
+                    break;
+                case 2:
+                    printf(YELLOW_COLOR);
+                    break;
+            }
+        }
+
+        printf(s);
+
+        int x = 200000000;
+        while (x--);
+    }
+
+    return NOTHING;
 }
 
 CodeError_t ParsingFile(processor_t *proc) {
@@ -238,131 +368,39 @@ CodeError_t execution(processor_t *proc) {
         CodeError_t error_code = NOTHING;
 
         switch(operation) {
-            case PUSH:
-            {
-                StackElem_t value = proc->bytecode[proc->ic++];
+            case PUSH:  error_code = ProcStackPush(proc);       break;
+            case POP:   error_code = ProcStackPop(proc);        break;
 
-                error_code = StackPush(proc->stack, value);
-                break;
-            }
-            case PUSHR:
-            {
-                error_code = ProcPushReg(proc);
-                break;
-            }
-            case POPR:
-            {
-                error_code = ProcPopReg(proc);
-                break;
-            }
-            case JMP:
-            {
-                error_code = ProcJmp(proc);
-                break;
-            }
-            case JB:
-            {
-                procj(<);
-                break;
-            }
-            case JBE:
-            {
-                procj(<=);
-                break;
-            }
-            case JA:
-            {
-                procj(>);
-                break;
-            }
-            case JAE:
-            {
-                procj(>=);
-                break;
-            }
-            case JE:
-            {
-                procj(==);
-                break;
-            }
-            case JNE:
-            {
-                procj(!=);
-                break;
-            }
-            case CALL:
-            {
-                error_code = StackPush(proc->stack_ret, proc->ic + 1);
-                proc->ic = proc->bytecode[proc->ic];
-                break;
-            }
-            case RET:
-            {
-                if (proc->stack_ret->size)
-                    proc->ic = StackPop(proc->stack_ret);
-                break;
-            }
-            case PUSHM:
-            {
-                ProcPushRam(proc);
-                break;
-            }
-            case POPM:
-            {
-                ProcPopRam(proc);
-                break;
-            }
-            case ADD:
-            {
-                error_code = StackAdd(proc->stack);
-                break;
-            }
-            case SUB:
-            {
-                error_code = StackSub(proc->stack);
-                break;
-            }
-            case MUL:
-            {
-                error_code = StackMul(proc->stack);
-                break;
-            }
-            case DIV:
-            {
-                error_code = StackDiv(proc->stack);
-                break;
-            }
-            case SQRT:
-            {
-                error_code = StackSqrt(proc->stack);
-                break;
-            }
-            case POW:
-            {
-                error_code = StackPow(proc->stack);
-                break;
-            }
-            case OUT:
-            {
-                error_code = StackOut(proc->stack);
-                break;
-            }
-            case TOP:
-            {
-                error_code = StackTop(proc->stack);
-                break;
-            }
-            case IN:
-            {
-                error_code = StackIn(proc->stack);
-                break;
-            }
-            case HLT:
-            {
-                ON_DEBUG(procdump(proc));
-                return NOTHING;
-                break;
-            }
+            case PUSHR: error_code = ProcPushReg(proc);         break;
+            case POPR:  error_code = ProcPopReg(proc);          break;
+
+            case JMP:   error_code = ProcJmp(proc);             break;
+
+            case JB:    procj(<);                               break;
+            case JBE:   procj(<=);                              break;
+            case JA:    procj(>);                               break;
+            case JAE:   procj(>=);                              break;
+            case JE:    procj(==);                              break;
+            case JNE:   procj(!=);                              break;
+
+            case CALL:  error_code = ProcCall(proc);            break;
+            case RET:   error_code = ProcRet(proc);             break;
+
+            case PUSHM: error_code = ProcPushRam(proc);         break;
+            case POPM:  error_code = ProcPopRam(proc);          break;
+            case DRAW:  error_code = ProcDraw(proc);            break;
+
+            case ADD:   error_code = StackAdd(proc->stack);     break;
+            case SUB:   error_code = StackSub(proc->stack);     break;
+            case MUL:   error_code = StackMul(proc->stack);     break;
+            case DIV:   error_code = StackDiv(proc->stack);     break;
+            case SQRT:  error_code = StackSqrt(proc->stack);    break;
+            case POW:   error_code = StackPow(proc->stack);     break;
+            case OUT:   error_code = StackOut(proc->stack);     break;
+            case TOP:   error_code = StackTop(proc->stack);     break;
+            case IN:    error_code = StackIn(proc->stack);      break;
+
+            case HLT:   ON_DEBUG(procdump(proc));               return NOTHING;
         }
         
         if (error_code != NOTHING) {

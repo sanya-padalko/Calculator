@@ -21,32 +21,43 @@ struct assembler_t {
     int labels[10] = {};
 };
 
-enum OperCode {
-    PUSH_CODE  =  88,
-    POP_CODE   = 823,
-    ADD_CODE   = 633,
-    SUB_CODE   = 962,
-    MUL_CODE   = 326,
-    DIV_CODE   = 683,
-    SQRT_CODE  = 410,
-    POW_CODE   = 446,
-    OUT_CODE   = 880,
-    TOP_CODE   = 507,
-    IN_CODE    = 319,
-    PUSHR_CODE = 170,
-    POPR_CODE  = 529,
-    JMP_CODE   = 423,
-    JB_CODE    = 996,
-    JBE_CODE   = 137,
-    JA_CODE    =  59,
-    JAE_CODE   = 200,
-    JE_CODE    = 807,
-    JNE_CODE   = 381,
-    CALL_CODE  = 884,
-    RET_CODE   = 651,
-    PUSHM_CODE = 165,
-    POPM_CODE  = 364,
-    HLT_CODE   =   0
+#define Number (1 << 0)
+#define Label  (1 << 1)
+#define Reg    (1 << 2)
+#define Mem    (1 << 3)
+
+const operation_t operations[] = {
+    {  .name = "PUSH"  ,  .hash =  88  ,  .code =  PUSH  ,  .args = 0 + Number  },
+    {  .name = "POP"   ,  .hash = 823  ,  .code =   POP  ,  .args = 0           },
+    {  .name = "TOP"   ,  .hash = 507  ,  .code =   TOP  ,  .args = 0           },
+    {  .name = "IN"    ,  .hash = 319  ,  .code =    IN  ,  .args = 0           },
+    {  .name = "OUT"   ,  .hash = 880  ,  .code =   OUT  ,  .args = 0           },
+
+    {  .name = "ADD"   ,  .hash = 633  ,  .code =   ADD  ,  .args = 0           },
+    {  .name = "SUB"   ,  .hash = 962  ,  .code =   SUB  ,  .args = 0           },
+    {  .name = "MUL"   ,  .hash = 326  ,  .code =   MUL  ,  .args = 0           },
+    {  .name = "DIV"   ,  .hash = 683  ,  .code =   DIV  ,  .args = 0           },
+    {  .name = "SQRT"  ,  .hash = 410  ,  .code =  SQRT  ,  .args = 0           },
+    {  .name = "POW"   ,  .hash = 446  ,  .code =   POW  ,  .args = 0           },
+
+    {  .name = "JMP"   ,  .hash = 423  ,  .code =   JMP  ,  .args = 0 + Label   },
+    {  .name = "JB"    ,  .hash = 996  ,  .code =    JB  ,  .args = 0 + Label   },
+    {  .name = "JBE"   ,  .hash = 137  ,  .code =   JBE  ,  .args = 0 + Label   },
+    {  .name = "JA"    ,  .hash =  59  ,  .code =    JA  ,  .args = 0 + Label   },
+    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE ,  .args = 0 + Label   },
+    {  .name = "JE"    ,  .hash = 807  ,  .code =    JE  ,  .args = 0 + Label   },
+    {  .name = "JNE"   ,  .hash = 381  ,  .code =   JNE  ,  .args = 0 + Label   },
+    {  .name = "CALL"  ,  .hash = 884  ,  .code =  CALL  ,  .args = 0 + Label   },
+    {  .name = "RET"   ,  .hash = 651  ,  .code =   RET  ,  .args = 0           },
+
+    {  .name = "PUSHM" ,  .hash = 165  ,  .code = PUSHM  ,  .args = 0 + Mem     },
+    {  .name = "POPM"  ,  .hash = 364  ,  .code =  POPM  ,  .args = 0 + Mem     },
+    {  .name = "DRAW"  ,  .hash = 118  ,  .code =  DRAW  ,  .args = 0           },
+
+    {  .name = "PUSHR" ,  .hash = 170  ,  .code = PUSHR  ,  .args = 0 + Reg     },
+    {  .name = "POPR"  ,  .hash = 529  ,  .code =  POPR  ,  .args = 0 + Reg     },
+
+    {  .name = "HLT"   ,  .hash =   0  ,  .code =   HLT  ,  .args = 0           }
 };
 
 CodeError_t assembler(assembler_t* assem);
