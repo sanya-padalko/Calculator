@@ -246,8 +246,8 @@ CodeError_t Circle(processor_t* proc) {
         for (int j = 0; j < 240; ++j)
             proc->ram[i * 240 + j] = 0;
 
-    for (int i = r % 2; i < 80; i += 2) {
-        for (int j = r % 2; j < 240; j += 2) {
+    for (int i = 0; i < 80; ++i) {
+        for (int j = 0; j < 240; ++j) {
             int di = abs(40 - i);
             int dj = abs(60 - j);
             di *= di;
