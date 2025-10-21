@@ -1,19 +1,21 @@
-0000	 JMP    :0   	 20  22  
-0002	 PUSHR  RAX  	 40  0   
-0004	 PUSH   0    	 1   0   
-0006	 JA     :2   	 23  9   
-0008	 RET         	 28  
-0009	 PUSHR  RAX  	 40  0   
-0011	 MUL         	 12  
-0012	 PUSHR  RAX  	 40  0   
-0014	 PUSH   1    	 1   1   
-0016	 SUB         	 11  
-0017	 POPR   RAX  	 41  0   
-0019	 CALL   :1   	 27  2   
-0021	 RET         	 28  
-0022	 IN          	 4   
-0023	 POPR   RAX  	 41  0   
-0025	 PUSH   1    	 1   1   
-0027	 CALL   :1   	 27  2   
-0029	 OUT         	 5   
-0030	 HLT         	 50  
+IC    |  Operation     |  Code
+--------------------------------
+0000  |  JMP    :0     |  20  22  
+0002  |  PUSHR  RAX    |  40  0   
+0004  |  PUSH   0      |  1   0   
+0006  |  JA     :2     |  23  9   
+0008  |  RET           |  28  
+0009  |  PUSHR  RAX    |  40  0   
+0011  |  MUL           |  12  
+0012  |  PUSHR  RAX    |  40  0   
+0014  |  PUSH   1      |  1   1   
+0016  |  SUB           |  11  
+0017  |  POPR   RAX    |  41  0   
+0019  |  CALL   :1     |  27  2   
+0021  |  RET           |  28  
+0022  |  IN            |  4   
+0023  |  POPR   RAX    |  41  0   
+0025  |  PUSH   1      |  1   1   
+0027  |  CALL   :1     |  27  2   
+0029  |  OUT           |  5   
+0030  |  HLT           |  50  

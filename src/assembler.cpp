@@ -132,14 +132,17 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
     assem->ic = 0;
     bool is_end = false;
     int last_ic = 0;
-    
+
     assem->listing = fopen(assem->listing_file, "w");
+
+    fprintf(assem->listing, "IC    |  Operation     |  Code\n");
+    fprintf(assem->listing, "--------------------------------\n");
 
     while (ZeroOper(operation) == NOTHING && ParseString(assem, operation, pass_num) == NOTHING) {
         if (operation[0] == ':')
             continue;
         
-        fprintf(assem->listing, "%04d\t %-5s  ", last_ic, operation);
+        fprintf(assem->listing, "%04d  |  %-5s  ", last_ic, operation);
         
         int operation_code = CalcOperHash(operation);
         my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
@@ -186,7 +189,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 if (oper_args == 0)
                     fprintf(assem->listing, "%*s", 5, "");
 
-                fprintf(assem->listing, "\t ");
+                fprintf(assem->listing, "  |  ");
 
                 PrintNumber(assem, operations[i].code);
 
