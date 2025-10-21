@@ -11,10 +11,11 @@ struct assembler_t {
     const char* text_file = NULL;
     const char* commands_file = NULL;
 
+    const char* listing_file = NULL;
+    FILE* listing = NULL;
+
     Text* program = NULL;
-
     char* buf = NULL;
-
     char* ex_ptr = NULL;
 
     int ic = 0;

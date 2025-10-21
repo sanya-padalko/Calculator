@@ -4,7 +4,7 @@ int CalcOperHash(char* operation);
 CodeError_t ReadCodeFile(assembler_t* assem);
 CodeError_t ParseNumber(assembler_t* assem, const int* value);
 CodeError_t ParseMem(assembler_t* assem, const char* str);
-CodeError_t ParseReg(assembler_t* assem, const char* str, int pass_num);
+CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num);
 CodeError_t PrintNumber(assembler_t* assem, const int value);
 CodeError_t ParseLabel(assembler_t* assem, const int* value);
 CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
@@ -47,6 +47,8 @@ CodeError_t ParseNumber(assembler_t* assem, const int* value) {
     assem->buf += read_symbols;
     ++assem->ic;
 
+    fprintf(assem->listing, "%-5d", *value);
+
     return NOTHING;
 }
 
@@ -60,6 +62,8 @@ CodeError_t ParseLabel(assembler_t* assem, const int* value) {
     assem->buf += read_symbols;
     ++assem->ic;
 
+    fprintf(assem->listing, ":%-4d", *value);
+    
     return NOTHING;
 }
 
@@ -73,10 +77,12 @@ CodeError_t ParseMem(assembler_t* assem, const char* str) {
     assem->buf += read_symbols;
     ++assem->ic;
 
+    fprintf(assem->listing, "[%3s]", str);
+
     return NOTHING;
 }
 
-CodeError_t ParseReg(assembler_t* assem, const char* str, int pass_num) {
+CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     my_assert(str, NULLPTR, NULLPTR);
     my_assert(assem, NULLPTR, NULLPTR);
 
@@ -86,6 +92,9 @@ CodeError_t ParseReg(assembler_t* assem, const char* str, int pass_num) {
 
     if (pass_num == 1 && str[0] == ':')
         assem->labels[str[1] - '0'] = assem->ic--;
+
+    if (pass_num == 2 && str[0] == ':')
+        assem->ic--;
 
     assem->buf += read_symbols;
     ++assem->ic;
@@ -99,6 +108,8 @@ CodeError_t PrintNumber(assembler_t* assem, const int value) {
     sprintf(assem->ex_ptr, "%d ", value);
     while (*assem->ex_ptr != '\0')
         ++assem->ex_ptr;
+
+    fprintf(assem->listing, "%-4d", value);
 
     return NOTHING;
 }
@@ -120,11 +131,16 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
     CodeError_t error_code = NOTHING;
     assem->ic = 0;
     bool is_end = false;
+    int last_ic = 0;
+    
+    assem->listing = fopen(assem->listing_file, "w");
 
-    while (ZeroOper(operation) == NOTHING && ParseReg(assem, operation, pass_num) == NOTHING) {
+    while (ZeroOper(operation) == NOTHING && ParseString(assem, operation, pass_num) == NOTHING) {
         if (operation[0] == ':')
             continue;
-
+        
+        fprintf(assem->listing, "%04d\t %-5s  ", last_ic, operation);
+        
         int operation_code = CalcOperHash(operation);
         my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
         
@@ -154,9 +170,11 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 }
 
                 if (oper_args & Reg) {
-                    error_code = ParseReg(assem, reg_type, pass_num);
+                    error_code = ParseString(assem, reg_type, pass_num);
                     my_assert(error_code == NOTHING, error_code, error_code);
                     CheckReg(reg_type);
+
+                    fprintf(assem->listing, "%-5s", reg_type);
                 }
 
                 if (oper_args & Mem) {
@@ -164,6 +182,11 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                     my_assert(error_code == NOTHING, error_code, error_code);
                     CheckReg(reg_type);
                 }
+
+                if (oper_args == 0)
+                    fprintf(assem->listing, "%*s", 5, "");
+
+                fprintf(assem->listing, "\t ");
 
                 PrintNumber(assem, operations[i].code);
 
@@ -183,8 +206,13 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 
                 if (oper_args & Mem)
                     PrintNumber(assem, reg_type[1] - 'A');
+
+                break;
             }
         }
+
+        fprintf(assem->listing, "\n");
+        last_ic = assem->ic;
 
         if (!known_oper) {
             printerr("%d\n", operation_code);
@@ -242,10 +270,13 @@ CodeError_t assembler(assembler_t* assem) {
 
     PassingCode(assem, 1);      // magic number
 
+    fclose(assem->listing);
     assem->buf = assem->program->buf;
     assem->ex_ptr = exec_file;
 
     PassingCode(assem, 2);
+    
+    fclose(assem->listing);
 
     WriteToExFile(assem, exec_file);
 
