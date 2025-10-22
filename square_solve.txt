@@ -7,8 +7,30 @@ POPR RCX
 
 PUSHR RAX
 PUSH 0
-JE :1
+JNE :square
 
+PUSHR RBX
+PUSH 0
+JNE :linear
+
+PUSHR RCX
+PUSH 0
+JNE :noroots
+
+JMP :infinity
+
+:linear
+PUSH 1
+OUT
+PUSHR RCX
+PUSH -1
+MUL
+PUSHR RBX
+DIV
+OUT
+JMP :end
+
+:square
 PUSHR RBX
 PUSH 2
 POW
@@ -21,8 +43,25 @@ SUB
 POPR RDX
 PUSHR RDX
 PUSH 0
-JB :2
+JB :noroots
 
+PUSHR RDX
+PUSH 0
+JNE :2roots
+PUSH 1
+OUT
+PUSHR RBX
+PUSH -1
+MUL
+PUSH 2
+DIV
+PUSHR RAX
+DIV
+OUT
+
+JMP :end
+
+:2roots
 PUSH 2
 OUT
 PUSHR RDX
@@ -36,6 +75,8 @@ PUSHR RBX
 SUB
 PUSH 2
 DIV
+PUSHR RAX
+DIV
 OUT
 
 PUSHR RDX
@@ -43,17 +84,19 @@ PUSHR RBX
 SUB
 PUSH 2
 DIV
+PUSHR RAX
+DIV
 OUT
-JMP :3
+JMP :end
 
-:1
+:infinity
 PUSH -1
 OUT
-JMP :3
+JMP :end
 
-:2
+:noroots
 PUSH 0
 OUT
 
-:3
+:end
 HLT

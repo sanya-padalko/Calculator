@@ -10,8 +10,8 @@
 #include "assembler.h"
 #include "processor.h"
 
-int main() {
-    const char* start = "../factorial.txt";
+int main(int argc, char* argv[]) {
+    const char* start = argv[1];
     const char* ex_file = "../ex_file.txt";
     const char* list_file = "../listing.txt";
     
