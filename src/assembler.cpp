@@ -3,10 +3,10 @@
 int CalcOperHash(char* operation);
 CodeError_t ReadCodeFile(assembler_t* assem);
 CodeError_t ParseNumber(assembler_t* assem, const int* value);
+CodeError_t ParseLabel(assembler_t* assem, const char* label);
 CodeError_t ParseMem(assembler_t* assem, const char* str);
 CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num);
 CodeError_t PrintNumber(assembler_t* assem, const int value);
-CodeError_t ParseLabel(assembler_t* assem, const int* value);
 CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
 CodeError_t ZeroOper(char* operation);
 
@@ -21,7 +21,7 @@ int CalcOperHash(char* operation) {
     return operation_code;
 }
 
-#define CheckReg(reg) my_assert(reg[0] == 'R' && reg[2] == 'X' && ('A' <= reg[1] && reg[1] <= 'D'), REG_IND_ERR, REG_IND_ERR)
+#define CheckReg(reg) my_assert(reg[0] == 'R' && reg[2] == 'X' && ('A' <= reg[1] && reg[1] <= 'H'), REG_IND_ERR, REG_IND_ERR)
 
 CodeError_t ReadCodeFile(assembler_t* assem) {
     my_assert(assem, NULLPTR, NULLPTR);
@@ -30,6 +30,8 @@ CodeError_t ReadCodeFile(assembler_t* assem) {
     my_assert(assem->program, FILE_ERR, NULLPTR);
 
     assem->buf = assem->program->buf;
+
+    assem->label = (label_t*)calloc(1, sizeof(label_t));
 
     CodeError_t error_code = ReadFile(assem->program);
     my_assert(error_code == NOTHING, error_code, NULLPTR);
@@ -47,39 +49,80 @@ CodeError_t ParseNumber(assembler_t* assem, const int* value) {
     assem->buf += read_symbols;
     ++assem->ic;
 
-    fprintf(assem->listing, "%-5d", *value);
+    fprintf(assem->listing, "%-9d", *value);
 
     return NOTHING;
 }
 
-CodeError_t ParseLabel(assembler_t* assem, const int* value) {
-    my_assert(value, NULLPTR, NULLPTR);
+CodeError_t ParseLabel(assembler_t* assem, const char* label) {
+    my_assert(label, NULLPTR, NULLPTR);
     my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols;
-    int correct = sscanf(assem->buf, " :%d%n", value, &read_symbols);
+    int correct = sscanf(assem->buf, " :%s%n", label, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
     assem->buf += read_symbols;
     ++assem->ic;
 
-    fprintf(assem->listing, ":%-4d", *value);
+    fprintf(assem->listing, ":%-8s", label);
     
     return NOTHING;
 }
 
-CodeError_t ParseMem(assembler_t* assem, const char* str) {
-    my_assert(str, NULLPTR, NULLPTR);
+CodeError_t ParseMem(assembler_t* assem, const char* reg) {
+    my_assert(reg, NULLPTR, NULLPTR);
     my_assert(assem, NULLPTR, NULLPTR);
 
     int read_symbols = 0;
-    int correct = sscanf(assem->buf, " [%s%n", str, &read_symbols);
+    int correct = sscanf(assem->buf, " [%s%n", reg, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
     assem->buf += read_symbols;
     ++assem->ic;
 
-    fprintf(assem->listing, "[%3s]", str);
+    fprintf(assem->listing, "[%-7s", reg);
 
     return NOTHING;
+}
+
+int GetInd(const char* str) { // + assert
+    int ind = 0;
+
+    if (isdigit(*str))
+        ind = 26 + (*str - '0');
+    else
+        ind = tolower(*str) - 'a';
+
+    return ind;
+}
+
+CodeError_t AddLabel(label_t* label, const char* str, const int ic) {
+    my_assert(label, NULLPTR, NULLPTR);
+
+    if (*str == '\0') {
+        label->ic = ic;
+        return NOTHING;
+    }
+
+    int nxt = GetInd(str); // + assert
+
+    if (!label->nxt[nxt])
+        label->nxt[nxt] = (label_t*)calloc(1, sizeof(label_t));
+
+    return AddLabel(label->nxt[nxt], str + 1, ic);
+}
+
+int GetLabel(label_t* label, const char* str) {
+    my_assert(label, NULLPTR, -1);
+
+    if (*str == '\0')
+        return label->ic;
+
+    int nxt = GetInd(str); // + assert
+
+    if (label->nxt[nxt])
+        return GetLabel(label->nxt[nxt], str + 1);
+
+    return -1;
 }
 
 CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
@@ -91,9 +134,9 @@ CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
 
     if (pass_num == 1 && str[0] == ':')
-        assem->labels[str[1] - '0'] = assem->ic--;
+        AddLabel(assem->label, str + 1, assem->ic);
 
-    if (pass_num == 2 && str[0] == ':')
+    if (str[0] == ':')
         assem->ic--;
 
     assem->buf += read_symbols;
@@ -135,8 +178,8 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
 
     assem->listing = fopen(assem->listing_file, "w");
 
-    fprintf(assem->listing, "IC    |  Operation     |  Code\n");
-    fprintf(assem->listing, "--------------------------------\n");
+    fprintf(assem->listing, "IC    |  Operation         |  Code\n");
+    fprintf(assem->listing, "------------------------------------\n");
 
     while (ZeroOper(operation) == NOTHING && ParseString(assem, operation, pass_num) == NOTHING) {
         if (operation[0] == ':')
@@ -150,7 +193,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
         size_t operation_counts = sizeof(operations) / sizeof(operation_t);
         
         StackElem_t value = 0;
-        int new_ic = 0;
+        char new_ic[100] = {0};
         char reg_type[3] = {0};
 
         bool known_oper = false;
@@ -168,7 +211,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 }
 
                 if (oper_args & Label) {
-                    error_code = ParseLabel(assem, &new_ic);
+                    error_code = ParseLabel(assem, new_ic);
                     my_assert(error_code == NOTHING, error_code, error_code);
                 }
 
@@ -177,7 +220,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                     my_assert(error_code == NOTHING, error_code, error_code);
                     CheckReg(reg_type);
 
-                    fprintf(assem->listing, "%-5s", reg_type);
+                    fprintf(assem->listing, "%-9s", reg_type);
                 }
 
                 if (oper_args & Mem) {
@@ -187,7 +230,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                 }
 
                 if (oper_args == 0)
-                    fprintf(assem->listing, "%*s", 5, "");
+                    fprintf(assem->listing, "%*s", 9, "");
 
                 fprintf(assem->listing, "  |  ");
 
@@ -202,7 +245,7 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
                     PrintNumber(assem, value);
                 
                 if (oper_args & Label)
-                    PrintNumber(assem, assem->labels[new_ic]);
+                    PrintNumber(assem, GetLabel(assem->label, new_ic));
                 
                 if (oper_args & Reg)
                     PrintNumber(assem, reg_type[1] - 'A');
@@ -226,6 +269,8 @@ CodeError_t PassingCode(assembler_t* assem, int pass_num) {
         if (is_end)
             break;
     }
+
+    fprintf(assem->listing, "------------------------------------\n");
 
     if (pass_num == 2) my_assert(is_end, TERM_ERR, TERM_ERR);
 
