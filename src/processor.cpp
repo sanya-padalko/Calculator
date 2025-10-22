@@ -146,6 +146,29 @@ CodeError_t ProcStackPop(processor_t* proc) {
     return NOTHING;
 }
 
+CodeError_t ProcStackWork(processor_t* proc) {
+    CodeError_t error_code = ProcVerify(proc);
+    my_assert(error_code == NOTHING, error_code, error_code);
+
+    int operation = proc->bytecode[proc->ic - 1];
+
+    switch (operation) {
+        case ADD:   error_code = StackAdd(proc->stack);     break;
+        case SUB:   error_code = StackSub(proc->stack);     break;
+        case MUL:   error_code = StackMul(proc->stack);     break;
+        case DIV:   error_code = StackDiv(proc->stack);     break;
+        case SQRT:  error_code = StackSqrt(proc->stack);    break;
+        case POW:   error_code = StackPow(proc->stack);     break;
+        case OUT:   error_code = StackOut(proc->stack);     break;
+        case TOP:   error_code = StackTop(proc->stack);     break;
+        case IN:    error_code = StackIn(proc->stack);      break;
+    }
+
+    my_assert(error_code == NOTHING, error_code, error_code);
+    
+    return NOTHING;
+}
+
 CodeError_t ProcCall(processor_t* proc) {
     CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
@@ -171,7 +194,7 @@ CodeError_t ProcPushReg(processor_t* proc) {
     my_assert(code_error == NOTHING, code_error, code_error);
 
     int regs_ind = proc->bytecode[proc->ic++];
-    my_assert(0 <= regs_ind && regs_ind <= 3, REG_IND_ERR, REG_IND_ERR);
+    my_assert(0 <= regs_ind && regs_ind <= 7, REG_IND_ERR, REG_IND_ERR);
 
     CodeError_t error_code = StackPush(proc->stack, proc->regs[regs_ind]);
 
@@ -183,7 +206,7 @@ CodeError_t ProcPopReg(processor_t* proc) {
     my_assert(code_error == NOTHING, code_error, code_error);
 
     int regs_ind = proc->bytecode[proc->ic++];
-    my_assert(0 <= regs_ind && regs_ind <= 3, REG_IND_ERR, REG_IND_ERR);
+    my_assert(0 <= regs_ind && regs_ind <= 7, REG_IND_ERR, REG_IND_ERR);
 
     StackElem_t last = StackPop(proc->stack);
 
@@ -236,92 +259,46 @@ CodeError_t ProcJmp(processor_t* proc) {
                         else \
                             ++proc->ic; \
 
-CodeError_t Circle(processor_t* proc) {
-    int r = StackPop(proc->stack);
-    my_assert(r != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
 
-    r *= r;
+CodeError_t ProcCompJump(processor_t* proc) {
+    CodeError_t error_code = ProcVerify(proc);
+    my_assert(error_code == NOTHING, error_code, error_code);
+    
+    int operation = proc->bytecode[proc->ic - 1];
+    int a = 0, b = 0;
 
-    for (int i = 0; i < 80; ++i)
-        for (int j = 0; j < 240; ++j)
-            proc->ram[i * 240 + j] = 0;
-
-    for (int i = 0; i < 80; ++i) {
-        for (int j = 0; j < 240; ++j) {
-            int di = abs(40 - i);
-            int dj = abs(60 - j);
-            di *= di;
-            dj *= dj;
-            if (di * 3.9 + dj * 1.0 <= r * 3.9) {
-                proc->ram[i * 240 + j] = 1;
-            }
-            else {
-                proc->ram[i * 240 + j] = 0;
-            }
-        }
+    switch (operation) {
+        case JB:    procj(<);       break;
+        case JBE:   procj(<=);      break;
+        case JA:    procj(>);       break;
+        case JAE:   procj(>=);      break;
+        case JE:    procj(==);      break;
+        case JNE:   procj(!=);      break;
     }
 
-    return NOTHING;
+    return error_code;
 }
 
 CodeError_t ProcDraw(processor_t* proc) {
     CodeError_t error_code = ProcVerify(proc);
     my_assert(error_code == NOTHING, error_code, error_code);
 
-    
-    int r = StackPop(proc->stack);
-    my_assert(r != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
+    char circle[RamSize] = {0};
 
-    char s[19201] = {0};
-    int delta = -1;
-    int rmax = r;
+    char* circle_print = circle;
 
-    while (true) {
-        r += delta;
-        if (r == 4 || r == rmax) {
-            delta *= -1;
+    for (int i = 0; i < RamSize; ++i) {
+        if (proc->ram[i] == 1)
+            sprintf(circle_print++, "0");
+        else
+            sprintf(circle_print++, " ");
+
+        if (i % 200 == 199) {
+            sprintf(circle_print++, "\n");
         }
-
-        system("cls");
-
-        StackPush(proc->stack, r);
-
-        error_code = Circle(proc);
-        my_assert(error_code == NOTHING, error_code, error_code);
-
-        char* it = s;
-        for (int i = 0; i < 19200; ++i) {
-            if (i % 240 > 120) {
-                if (i % 240 == 121)
-                    sprintf(it++, "\n");
-                continue;
-            }
-            if (proc->ram[i] == 1)
-                sprintf(it++, "W");
-            else
-                sprintf(it++, " ");
-        }
-    
-        if (r % 5 == 0) {
-            int p = rand() % 3;
-            switch (p) {
-                case 0:
-                    printf(RED_COLOR);
-                    break;
-                case 1:
-                    printf(GREEN_COLOR);
-                    break;
-                case 2:
-                    printf(YELLOW_COLOR);
-                    break;
-            }
-        }
-
-        printf(s);
-
-        int x = 200000000;
-        while (x--);
     }
+
+    printf(circle);
 
     return NOTHING;
 }
@@ -367,40 +344,17 @@ CodeError_t execution(processor_t *proc) {
         operation = proc->bytecode[proc->ic++];
         CodeError_t error_code = NOTHING;
 
-        switch(operation) {
-            case PUSH:  error_code = ProcStackPush(proc);       break;
-            case POP:   error_code = ProcStackPop(proc);        break;
+        if (operation == HLT) {
+            ON_DEBUG(procdump(proc));
+            return NOTHING;
+        }
 
-            case PUSHR: error_code = ProcPushReg(proc);         break;
-            case POPR:  error_code = ProcPopReg(proc);          break;
-
-            case JMP:   error_code = ProcJmp(proc);             break;
-
-            case JB:    procj(<);                               break;
-            case JBE:   procj(<=);                              break;
-            case JA:    procj(>);                               break;
-            case JAE:   procj(>=);                              break;
-            case JE:    procj(==);                              break;
-            case JNE:   procj(!=);                              break;
-
-            case CALL:  error_code = ProcCall(proc);            break;
-            case RET:   error_code = ProcRet(proc);             break;
-
-            case PUSHM: error_code = ProcPushRam(proc);         break;
-            case POPM:  error_code = ProcPopRam(proc);          break;
-            case DRAW:  error_code = ProcDraw(proc);            break;
-
-            case ADD:   error_code = StackAdd(proc->stack);     break;
-            case SUB:   error_code = StackSub(proc->stack);     break;
-            case MUL:   error_code = StackMul(proc->stack);     break;
-            case DIV:   error_code = StackDiv(proc->stack);     break;
-            case SQRT:  error_code = StackSqrt(proc->stack);    break;
-            case POW:   error_code = StackPow(proc->stack);     break;
-            case OUT:   error_code = StackOut(proc->stack);     break;
-            case TOP:   error_code = StackTop(proc->stack);     break;
-            case IN:    error_code = StackIn(proc->stack);      break;
-
-            case HLT:   ON_DEBUG(procdump(proc));               return NOTHING;
+        int oper_counts = sizeof(operations) / sizeof(operation_t);
+        for (int id = 0; id < oper_counts; ++id) {
+            if (operation == operations[id].code) {
+                error_code = operations[id].func(proc);
+                break;
+            }
         }
         
         if (error_code != NOTHING) {
