@@ -1,18 +1,20 @@
 #include "calculator.h"
+#include "processor.h"
+#include "stack.h"
 
 static StackElem_t calc_sqrt(StackElem_t value);
 static StackElem_t pow(StackElem_t a, StackElem_t b);
 
-CodeError_t StackAdd(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcAdd(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
+    my_assert(get_size(proc->stack) >= 2, SIZE_ERR, SIZE_ERR);
 
-    StackElem_t a = StackPop(stack);
-    StackElem_t b = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
 
-    CodeError_t error_code = StackPush(stack, b + a);
+    CodeError_t error_code = StackPush(proc->stack, b + a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Addition was not completed\n" RESET_COLOR);
@@ -20,16 +22,16 @@ CodeError_t StackAdd(stack_t *stack) {
     return error_code;
 }
 
-CodeError_t StackSub(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcSub(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
+    my_assert(get_size(proc->stack) >= 2, SIZE_ERR, SIZE_ERR);
 
-    StackElem_t a = StackPop(stack);
-    StackElem_t b = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
 
-    CodeError_t error_code = StackPush(stack, b - a);
+    CodeError_t error_code = StackPush(proc->stack, b - a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Subtraction was not completed\n" RESET_COLOR);
@@ -37,16 +39,16 @@ CodeError_t StackSub(stack_t *stack) {
     return error_code;
 }
 
-CodeError_t StackMul(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcMul(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
+    my_assert(get_size(proc->stack) >= 2, SIZE_ERR, SIZE_ERR);
 
-    StackElem_t a = StackPop(stack);
-    StackElem_t b = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
 
-    CodeError_t error_code = StackPush(stack, b * a);
+    CodeError_t error_code = StackPush(proc->stack, b * a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Multiplication was not completed\n" RESET_COLOR);
@@ -54,21 +56,21 @@ CodeError_t StackMul(stack_t *stack) {
     return error_code;
 }
 
-CodeError_t StackDiv(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcDiv(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size >= 2, SIZE_ERR, SIZE_ERR);
+    my_assert(get_size(proc->stack) >= 2, SIZE_ERR, SIZE_ERR);
 
-    StackElem_t a = StackPop(stack);
-    StackElem_t b = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
 
     if (a == 0) {
         printerr(RED_COLOR "You cannot divise by zero\n" RESET_COLOR);
         return VALUE_ERR;
     }
 
-    CodeError_t error_code = StackPush(stack, b / a);
+    CodeError_t error_code = StackPush(proc->stack, b / a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Division was not completed\n" RESET_COLOR);
@@ -93,13 +95,13 @@ static StackElem_t calc_sqrt(StackElem_t value) {
     return l;
 }
 
-CodeError_t StackSqrt(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcSqrt(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size, EMPTY_STACK, EMPTY_STACK);
+    my_assert(get_size(proc->stack), EMPTY_STACK, EMPTY_STACK);
 
-    StackElem_t a = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
 
     StackElem_t sqrt_a = calc_sqrt(a);
 
@@ -108,7 +110,7 @@ CodeError_t StackSqrt(stack_t *stack) {
         return VALUE_ERR;
     }
 
-    CodeError_t error_code = StackPush(stack, sqrt_a);
+    CodeError_t error_code = StackPush(proc->stack, sqrt_a);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Squarting was not completed\n" RESET_COLOR);
@@ -125,22 +127,21 @@ static StackElem_t pow(StackElem_t a, StackElem_t b) {
     return res;
 }
 
-CodeError_t StackPow(stack_t *stack) {
-    stackverify(stack);
-    if (code_error != NOTHING)
-        return code_error;
+CodeError_t ProcPow(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
 
-    if (stack->size < 2) {
+    if (get_size(proc->stack) < 2) {
         printerr(RED_COLOR "Not enough numbers for exponentiation\n" RESET_COLOR);
         return SIZE_ERR;
     }
 
-    StackElem_t a = StackPop(stack);
-    StackElem_t b = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
+    StackElem_t b = StackPop(proc->stack);
 
     my_assert(a >= 0, VALUE_ERR, VALUE_ERR);
 
-    CodeError_t error_code = StackPush(stack, pow(b, a));
+    CodeError_t error_code = StackPush(proc->stack, pow(b, a));
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Exponentation was not completed\n" RESET_COLOR);
@@ -148,13 +149,13 @@ CodeError_t StackPow(stack_t *stack) {
     return error_code;
 }
 
-CodeError_t StackOut(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcOut(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size > 0, EMPTY_STACK, EMPTY_STACK);
+    my_assert(get_size(proc->stack) > 0, EMPTY_STACK, EMPTY_STACK);
 
-    StackElem_t a = StackPop(stack);
+    StackElem_t a = StackPop(proc->stack);
 
     if (a == POIZON_VALUE) {
         printerr(RED_COLOR "Something in Outputing went wrong\n" RESET_COLOR);
@@ -166,19 +167,19 @@ CodeError_t StackOut(stack_t *stack) {
     return NOTHING;
 }
 
-CodeError_t StackTop(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcTop(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
-    my_assert(stack->size > 0, EMPTY_STACK, EMPTY_STACK);
+    my_assert(get_size(proc->stack) > 0, EMPTY_STACK, EMPTY_STACK);
 
-    StackElem_t a = stack->data[stack->size - 1];
+    StackElem_t a = proc->stack->data[get_size(proc->stack) - 1];
 
     return NOTHING;
 }
 
-CodeError_t StackIn(stack_t *stack) {
-    stackverify(stack);
+CodeError_t ProcIn(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
 
     StackElem_t value = 0;
@@ -186,7 +187,7 @@ CodeError_t StackIn(stack_t *stack) {
 
     my_assert(scanf_check == 1, INPUT_ERR, INPUT_ERR);
 
-    CodeError_t error_code = StackPush(stack, value);
+    CodeError_t error_code = StackPush(proc->stack, value);
 
     if (error_code != NOTHING)
         printerr(RED_COLOR "Input was not completed\n" RESET_COLOR);

@@ -201,29 +201,6 @@ CodeError_t ProcStackPop(processor_t* proc) {
     return NOTHING;
 }
 
-CodeError_t ProcStackWork(processor_t* proc) {
-    CodeError_t error_code = ProcVerify(proc);
-    my_assert(error_code == NOTHING, error_code, error_code);
-
-    int operation = proc->bytecode[proc->ic - 1];
-
-    switch (operation) {
-        case ADD:   error_code = StackAdd(proc->stack);     break;
-        case SUB:   error_code = StackSub(proc->stack);     break;
-        case MUL:   error_code = StackMul(proc->stack);     break;
-        case DIV:   error_code = StackDiv(proc->stack);     break;
-        case SQRT:  error_code = StackSqrt(proc->stack);    break;
-        case POW:   error_code = StackPow(proc->stack);     break;
-        case OUT:   error_code = StackOut(proc->stack);     break;
-        case TOP:   error_code = StackTop(proc->stack);     break;
-        case IN:    error_code = StackIn(proc->stack);      break;
-    }
-
-    my_assert(error_code == NOTHING, error_code, error_code);
-    
-    return NOTHING;
-}
-
 CodeError_t ProcCall(processor_t* proc) {
     CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);
@@ -307,29 +284,30 @@ CodeError_t ProcJmp(processor_t* proc) {
     return NOTHING;
 }
 
-#define procj(expr)     a = StackPop(proc->stack); \
-                        b = StackPop(proc->stack); \
-                        if (b expr a) \
-                            proc->ic = proc->bytecode[proc->ic]; \
-                        else \
-                            ++proc->ic; \
-
-
 CodeError_t ProcCmpJump(processor_t* proc) {
     CodeError_t error_code = ProcVerify(proc);
     my_assert(error_code == NOTHING, error_code, error_code);
     
     int operation = proc->bytecode[proc->ic - 1];
-    int a = 0, b = 0;
+    int a = StackPop(proc->stack);
+    int b = StackPop(proc->stack);
+    my_assert(a != POIZON_VALUE && b != POIZON_VALUE, VALUE_ERR, VALUE_ERR);
+
+    bool result = false;
 
     switch (operation) {
-        case JB:    procj(<);       break;
-        case JBE:   procj(<=);      break;
-        case JA:    procj(>);       break;
-        case JAE:   procj(>=);      break;
-        case JE:    procj(==);      break;
-        case JNE:   procj(!=);      break;
+        case JB:    result = (b < a);       break;
+        case JA:    result = (b > a);       break;
+        case JBE:   result = (b <= a);      break;
+        case JAE:   result = (b >= a);      break;
+        case JE:    result = (b == a);      break;
+        case JNE:   result = (b != a);      break;
     }
+
+    if (result)
+        proc->ic = proc->bytecode[proc->ic];
+    else
+        ++proc->ic;
 
     return error_code;
 }
@@ -357,5 +335,3 @@ CodeError_t ProcDraw(processor_t* proc) {
 
     return NOTHING;
 }
-
-#undef procj
