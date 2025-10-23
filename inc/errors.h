@@ -20,16 +20,16 @@
 #define BLUE_COLOR   "\033[36m" 
 
 enum CodeError_t {
-    NOTHING        =   0,
-    NULLPTR        =   1,
-    SIZE_ERR       =   2,
-    EMPTY_STACK    =   3,
-    CAPACITY_ERR   =   4,
-    CANARY_ERR     =   5,
-    REALLOC_ERR    =   6,
-    HASH_ERR       =   7,
-    CAP_SIZE_ERR   =   8,
-    VALUE_ERR      =   9,
+    NOTHING        =    0,
+    NULLPTR        =    1,
+    SIZE_ERR       =    2,
+    EMPTY_STACK    =    3,
+    CAPACITY_ERR   =    4,
+    CANARY_ERR     =    5,
+    REALLOC_ERR    =    6,
+    HASH_ERR       =    7,
+    CAP_SIZE_ERR   =    8,
+    VALUE_ERR      =    9,
     OPERATION_ERR  =   10,  
     FILE_ERR       =   11,  
     STACK_ERR      =   12,
@@ -38,6 +38,8 @@ enum CodeError_t {
     INPUT_ERR      =   16,
     REG_IND_ERR    =   17,
     TERM_ERR       =   18,
+    LABEL_ERR      =   19,
+    CALLOC_ERR     =   20,
     ERROR_COUNTS
 };
 

@@ -57,6 +57,12 @@ void PrintErr(CodeError_t error_type, const char* file_name, const char* func_na
         case TERM_ERR:
             printerr(RED_COLOR "Termination command is missing\n");
             break;
+        case LABEL_ERR:
+            printerr(RED_COLOR "Working with label went wrong\n");
+            break;
+        case CALLOC_ERR:
+            printerr(RED_COLOR "Calloc went wrong\n");
+            break;
         default:
             printerr(YELLOW_COLOR "Unknown error\n");
     }
