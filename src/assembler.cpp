@@ -17,6 +17,7 @@ CodeError_t PrintNumber(assembler_t* assem, const int value);
 CodeError_t AddLabel(label_t* label, const char* str, const int ic);
 int GetLabel(label_t* label, const char* str);
 int GetInd(const char* str);
+void CalcAllHashs();
 
 CodeError_t assembler(assembler_t* assem) {
     my_assert(assem, NULLPTR, NULLPTR);
@@ -322,6 +323,21 @@ int GetInd(const char* str) {
         ind = tolower(*str) - 'a';
 
     return ind;
+}
+
+void CalcAllHashs() {
+    for (size_t i = 0; i < HLT + 1; ++i) {
+        char operation[MaxOperationSize] = {0};
+        for (size_t j = 0; j < MaxOperationSize; ++j) {
+            if (operations[i].name[j] == '\0')
+                break;
+
+            operation[j] = operations[i].name[j];
+        }
+        printf("%5s: %3d\n", operations[i].name, CalcOperHash(operation));
+    }
+
+    printerr("\n");
 }
 
 #undef CheckReg
