@@ -1,6 +1,61 @@
 #include "processor.h"
 
-CodeError_t ProcVerify(processor_t* proc);
+CodeError_t execution(processor_t *proc) {
+    my_assert(proc, NULLPTR, NULLPTR);
+
+    int operation = 0, a = 0, b = 0;
+
+    for (proc->ic = 0; proc->ic < proc->cmd_cnt;) {
+        operation = proc->bytecode[proc->ic++];
+        CodeError_t error_code = NOTHING;
+
+        if (operation == HLT) {
+            ON_DEBUG(procdump(proc));
+            return NOTHING;
+        }
+
+        error_code = operations[operation].func(proc);
+        
+        if (error_code != NOTHING) {
+            ON_DEBUG(procdump(proc));
+            return error_code;
+        }
+    }
+
+    return NOTHING;
+}
+
+CodeError_t LoadFile(processor_t *proc) {
+    my_assert(proc, NULLPTR, NULLPTR);
+
+    CodeError_t error_code = ReadFile(proc->code);
+    my_assert(error_code == NOTHING, error_code, error_code);
+
+    error_code = ParsingFile(proc);
+    my_assert(error_code == NOTHING, error_code, error_code);
+
+    return NOTHING;
+}
+
+CodeError_t ParsingFile(processor_t *proc) {
+    CodeError_t code_error = ProcVerify(proc);
+    my_assert(code_error == NOTHING, code_error, code_error);
+
+    int cmd_ind = 0;
+    char* start = proc->code->buf;
+    
+    for (; start < proc->code->buf + proc->code->file_size; ) {
+        int value = 0;
+        int n = 0;
+        sscanf(start, "%d %n", &value, &n);
+        start += n;
+        proc->bytecode[cmd_ind++] = value;
+    }
+
+    proc->cmd_cnt = cmd_ind;
+
+    return NOTHING;
+}
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
     ON_DEBUG(PrintVarInfo(varinfo));
@@ -260,7 +315,7 @@ CodeError_t ProcJmp(processor_t* proc) {
                             ++proc->ic; \
 
 
-CodeError_t ProcCompJump(processor_t* proc) {
+CodeError_t ProcCmpJump(processor_t* proc) {
     CodeError_t error_code = ProcVerify(proc);
     my_assert(error_code == NOTHING, error_code, error_code);
     
@@ -299,69 +354,6 @@ CodeError_t ProcDraw(processor_t* proc) {
     }
 
     printf(circle);
-
-    return NOTHING;
-}
-
-CodeError_t ParsingFile(processor_t *proc) {
-    CodeError_t code_error = ProcVerify(proc);
-    my_assert(code_error == NOTHING, code_error, code_error);
-
-    int cmd_ind = 0;
-    char* start = proc->code->buf;
-    
-    for (; start < proc->code->buf + proc->code->file_size; ) {
-        int value = 0;
-        int n = 0;
-        sscanf(start, "%d %n", &value, &n);
-        start += n;
-        proc->bytecode[cmd_ind++] = value;
-    }
-
-    proc->cmd_cnt = cmd_ind;
-
-    return NOTHING;
-}
-
-CodeError_t LoadFile(processor_t *proc) {
-    my_assert(proc, NULLPTR, NULLPTR);
-
-    CodeError_t error_code = ReadFile(proc->code);
-    my_assert(error_code == NOTHING, error_code, error_code);
-
-    error_code = ParsingFile(proc);
-    my_assert(error_code == NOTHING, error_code, error_code);
-
-    return NOTHING;
-}
-
-CodeError_t execution(processor_t *proc) {
-    my_assert(proc, NULLPTR, NULLPTR);
-
-    int operation = 0, a = 0, b = 0;
-
-    for (proc->ic = 0; proc->ic < proc->cmd_cnt;) {
-        operation = proc->bytecode[proc->ic++];
-        CodeError_t error_code = NOTHING;
-
-        if (operation == HLT) {
-            ON_DEBUG(procdump(proc));
-            return NOTHING;
-        }
-
-        int oper_counts = sizeof(operations) / sizeof(operation_t);
-        for (int id = 0; id < oper_counts; ++id) {
-            if (operation == operations[id].code) {
-                error_code = operations[id].func(proc);
-                break;
-            }
-        }
-        
-        if (error_code != NOTHING) {
-            ON_DEBUG(procdump(proc));
-            return error_code;
-        }
-    }
 
     return NOTHING;
 }

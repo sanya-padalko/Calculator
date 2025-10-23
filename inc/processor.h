@@ -8,8 +8,18 @@
 #include "text_utils.h"
 #include "vars.h"
 
+#define Number (1 << 0)
+#define Label  (1 << 1)
+#define Reg    (1 << 2)
+#define Mem    (1 << 3)
+
+#define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))
+
+#define procdump(name) ProcDump(name, VarInfoCtor(#name, line_info))
+
 const size_t RegsCount = 8;
 const size_t RamSize = 40000;
+const int MaxOperationSize = 5;
 
 struct processor_t {
     stack_t *stack = NULL;
@@ -26,8 +36,6 @@ struct processor_t {
     StackElem_t regs[RegsCount] = {0};
 };
 
-const int MaxOperationSize = 5;
-
 struct operation_t {
     const char* name;
 
@@ -41,54 +49,42 @@ struct operation_t {
 };
 
 enum ProcOper {
-    PUSH  =  1,
-    POP   =  2,
-    TOP   =  3,
-    IN    =  4,
-    OUT   =  5,
+    PUSH  ,
+    POP   ,
+    TOP   ,
+    IN    ,
+    OUT   ,
 
-    ADD   = 10,
-    SUB   = 11,
-    MUL   = 12,
-    DIV   = 13,
-    SQRT  = 14,
-    POW   = 15,
+    ADD   ,
+    SUB   ,
+    MUL   ,
+    DIV   ,
+    SQRT  ,
+    POW   ,
 
-    JMP   = 20,
-    JB    = 21,
-    JBE   = 22,
-    JA    = 23,
-    JAE   = 24,
-    JE    = 25,
-    JNE   = 26,
-    CALL  = 27,
-    RET   = 28,
+    JMP   ,
+    JB    ,
+    JBE   ,
+    JA    ,
+    JAE   ,
+    JE    ,
+    JNE   ,
+    CALL  ,
+    RET   ,
     
-    PUSHM = 30,
-    POPM  = 31,
-    DRAW  = 32,
+    PUSHM ,
+    POPM  ,
+    DRAW  ,
 
-    PUSHR = 40, 
-    POPR  = 41,
+    PUSHR , 
+    POPR  ,
     
-    HLT   = 50
+    HLT
 };
-
-#define Number (1 << 0)
-#define Label  (1 << 1)
-#define Reg    (1 << 2)
-#define Mem    (1 << 3)
-
-#define make_processor(code_file) ProcCtor(code_file ON_DEBUG(, VarInfoCtor("processor", line_info)))
-
-#define procdump(name) ProcDump(name, VarInfoCtor(#name, line_info))
-
-const int err_regs_ind = 4;
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
 CodeError_t ProcDtor(processor_t* proc);
-CodeError_t StackPushReg(processor_t* proc);
-CodeError_t StackPopReg(processor_t* proc);
+CodeError_t ProcVerify(processor_t* proc);
 void ProcDump(processor_t* proc, VarInfo varinfo);
 
 CodeError_t ProcStackPush(processor_t* proc);
@@ -101,7 +97,7 @@ CodeError_t ProcPopReg(processor_t* proc);
 CodeError_t ProcPushRam(processor_t* proc);
 CodeError_t ProcPopRam(processor_t* proc);
 CodeError_t ProcJmp(processor_t* proc);
-CodeError_t ProcCompJump(processor_t* proc);
+CodeError_t ProcCmpJump(processor_t* proc);
 CodeError_t ProcDraw(processor_t* proc);
 
 CodeError_t ParsingFile(processor_t *proc);
@@ -123,12 +119,12 @@ const operation_t operations[] = {
     {  .name = "POW"   ,  .hash = 446  ,  .code =   POW  ,  .func = ProcStackWork,  .args = 0           },
 
     {  .name = "JMP"   ,  .hash = 423  ,  .code =   JMP  ,  .func =       ProcJmp,  .args = 0 + Label   },
-    {  .name = "JB"    ,  .hash = 996  ,  .code =    JB  ,  .func =  ProcCompJump,  .args = 0 + Label   },
-    {  .name = "JBE"   ,  .hash = 137  ,  .code =   JBE  ,  .func =  ProcCompJump,  .args = 0 + Label   },
-    {  .name = "JA"    ,  .hash =  59  ,  .code =    JA  ,  .func =  ProcCompJump,  .args = 0 + Label   },
-    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE  ,  .func =  ProcCompJump,  .args = 0 + Label   },
-    {  .name = "JE"    ,  .hash = 807  ,  .code =    JE  ,  .func =  ProcCompJump,  .args = 0 + Label   },
-    {  .name = "JNE"   ,  .hash = 381  ,  .code =   JNE  ,  .func =  ProcCompJump,  .args = 0 + Label   },
+    {  .name = "JB"    ,  .hash = 996  ,  .code =    JB  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JBE"   ,  .hash = 137  ,  .code =   JBE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JA"    ,  .hash =  59  ,  .code =    JA  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JE"    ,  .hash = 807  ,  .code =    JE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JNE"   ,  .hash = 381  ,  .code =   JNE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
     {  .name = "CALL"  ,  .hash = 884  ,  .code =  CALL  ,  .func =      ProcCall,  .args = 0 + Label   },
     {  .name = "RET"   ,  .hash = 651  ,  .code =   RET  ,  .func =       ProcRet,  .args = 0           },
 
