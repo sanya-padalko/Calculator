@@ -1,27 +1,106 @@
 #include "assembler.h"
 
-int CalcOperHash(char* operation);
+#define CheckReg(reg) my_assert(reg[0] == 'R' && reg[2] == 'X' && ('A' <= reg[1] && reg[1] <= 'H'), REG_IND_ERR, REG_IND_ERR)
+
+CodeError_t assembler(assembler_t* assem);
+CodeError_t PassingCode(assembler_t* assem, int pass_num);
 CodeError_t ReadCodeFile(assembler_t* assem);
+CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
+int CalcOperHash(char* operation);
+CodeError_t ZeroOper(char* operation);
+CodeError_t ParseOper(assembler_t* assem, operation_t operation, int pass_num);
 CodeError_t ParseNumber(assembler_t* assem, const int* value);
 CodeError_t ParseLabel(assembler_t* assem, const char* label);
-CodeError_t ParseMem(assembler_t* assem, const char* str);
+CodeError_t ParseMem(assembler_t* assem, const char* reg);
 CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num);
 CodeError_t PrintNumber(assembler_t* assem, const int value);
-CodeError_t WriteToExFile(assembler_t* assem, const char* buf);
-CodeError_t ZeroOper(char* operation);
+CodeError_t AddLabel(label_t* label, const char* str, const int ic);
+int GetLabel(label_t* label, const char* str);
+int GetInd(const char* str);
 
-int CalcOperHash(char* operation) {
-    my_assert(operation, NULLPTR, -1);
+CodeError_t assembler(assembler_t* assem) {
+    my_assert(assem, NULLPTR, NULLPTR);
 
-    int operation_code = 0;
-    for (int c = 0; c < MaxOperationSize; c++) {
-        operation_code = ((operation_code * 33) + operation[c]) % 1000;
-    }
+    CodeError_t error_code = ReadCodeFile(assem);
+    my_assert(error_code == NOTHING, error_code, error_code);
 
-    return operation_code;
+    assem->ex_ptr = (char*)calloc(assem->program->file_size, sizeof(char));
+    my_assert(assem->ex_ptr, NULLPTR, NULLPTR);
+
+    char operation[MaxOperationSize + 1] = {};
+
+    char* exec_file = assem->ex_ptr;
+
+    PassingCode(assem, FirstPass);
+
+    fclose(assem->listing);
+
+    assem->buf = assem->program->buf;
+    assem->ex_ptr = exec_file;
+
+    PassingCode(assem, SecondPass);
+    
+    fclose(assem->listing);
+
+    WriteToExFile(assem, exec_file);
+
+    return error_code;
 }
 
-#define CheckReg(reg) my_assert(reg[0] == 'R' && reg[2] == 'X' && ('A' <= reg[1] && reg[1] <= 'H'), REG_IND_ERR, REG_IND_ERR)
+CodeError_t PassingCode(assembler_t* assem, int pass_num) {
+    char operation[MaxOperationSize] = {0};
+
+    CodeError_t error_code = NOTHING;
+    assem->ic = 0;
+    bool is_end = false;
+    int last_ic = 0;
+
+    assem->listing = fopen(assem->listing_file, "w");
+
+    fprintf(assem->listing, "IC    |  Operation         |  Code\n");
+    fprintf(assem->listing, "------------------------------------\n");
+
+    while (ZeroOper(operation) == NOTHING && ParseString(assem, operation, pass_num) == NOTHING) {
+        if (operation[0] == ':')
+            continue;
+        
+        fprintf(assem->listing, "%04d  |  %-5s  ", last_ic, operation);
+        
+        int operation_code = CalcOperHash(operation);
+        my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
+        
+        size_t operation_counts = sizeof(operations) / sizeof(operation_t);
+
+        for (size_t i = 0; i <= operation_counts; ++i) {
+            if (i == operation_counts) {
+                printerr("%d\n", operation_code);
+                printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
+                return OPERATION_ERR;
+            }
+
+            if (operations[i].hash == operation_code) {
+                error_code = ParseOper(assem, operations[i], pass_num);
+
+                if (operation_code == 0)
+                    is_end = true;
+
+                break;
+            }
+        }
+
+        fprintf(assem->listing, "\n");
+        last_ic = assem->ic;
+
+        if (is_end)
+            break;
+    }
+
+    fprintf(assem->listing, "------------------------------------\n");
+
+    if (pass_num == 2) my_assert(is_end, TERM_ERR, TERM_ERR);
+
+    return NOTHING;
+}
 
 CodeError_t ReadCodeFile(assembler_t* assem) {
     my_assert(assem, NULLPTR, NULLPTR);
@@ -37,6 +116,89 @@ CodeError_t ReadCodeFile(assembler_t* assem) {
     my_assert(error_code == NOTHING, error_code, NULLPTR);
 
     return NOTHING;
+}
+
+CodeError_t WriteToExFile(assembler_t* assem, const char* buf) {
+    my_assert(assem, NULLPTR, NULLPTR);
+    my_assert(buf, NULLPTR, NULLPTR);
+
+    FILE* ex_file = fopen(assem->commands_file, "w");
+    my_assert(ex_file, FILE_ERR, FILE_ERR);
+
+    fwrite(buf, sizeof(char), assem->ex_ptr - buf, ex_file);
+    fclose(ex_file);
+}
+
+int CalcOperHash(char* operation) {
+    my_assert(operation, NULLPTR, -1);
+
+    int operation_code = 0;
+    for (int c = 0; c < MaxOperationSize; c++) {
+        operation_code = ((operation_code * 33) + operation[c]) % 1000;
+    }
+
+    return operation_code;
+}
+
+CodeError_t ZeroOper(char* operation) {
+    my_assert(operation, NULLPTR, NULLPTR);
+
+    for (size_t i = 0 ; i < MaxOperationSize; ++i)
+        operation[i] = 0;
+
+    return NOTHING;
+}
+
+CodeError_t ParseOper(assembler_t* assem, operation_t operation, int pass_num) {
+    my_assert(assem, NULLPTR, NULLPTR);
+
+    int oper_args = operation.args;
+
+    CodeError_t error_code = NOTHING;
+    StackElem_t value = 0;
+    char new_ic[100] = {0};
+    char reg_type[3] = {0};
+
+    if (oper_args & Number)
+        error_code = ParseNumber(assem, &value);
+
+    if (oper_args & Label)
+        error_code = ParseLabel(assem, new_ic);
+
+    if (oper_args & Reg) {
+        error_code = ParseString(assem, reg_type, pass_num);
+        my_assert(error_code == NOTHING, error_code, error_code);
+        CheckReg(reg_type);
+
+        fprintf(assem->listing, "%-9s", reg_type);
+    }
+
+    if (oper_args & Mem) {
+        error_code = ParseMem(assem, reg_type);
+        my_assert(error_code == NOTHING, error_code, error_code);
+        CheckReg(reg_type);
+    }
+
+    if (oper_args == 0)
+        fprintf(assem->listing, "%*s", 9, "");
+
+    fprintf(assem->listing, "  |  ");
+
+    PrintNumber(assem, operation.code);
+
+    if (oper_args & Number)
+        error_code = PrintNumber(assem, value);
+    
+    if (oper_args & Label)
+        error_code = PrintNumber(assem, GetLabel(assem->label, new_ic));
+    
+    if (oper_args & Reg)
+        error_code = PrintNumber(assem, reg_type[1] - 'A');
+    
+    if (oper_args & Mem)
+        error_code = PrintNumber(assem, reg_type[1] - 'A');
+
+    return error_code;
 }
 
 CodeError_t ParseNumber(assembler_t* assem, const int* value) {
@@ -84,47 +246,6 @@ CodeError_t ParseMem(assembler_t* assem, const char* reg) {
     return NOTHING;
 }
 
-int GetInd(const char* str) { // + assert
-    int ind = 0;
-
-    if (isdigit(*str))
-        ind = 26 + (*str - '0');
-    else
-        ind = tolower(*str) - 'a';
-
-    return ind;
-}
-
-CodeError_t AddLabel(label_t* label, const char* str, const int ic) {
-    my_assert(label, NULLPTR, NULLPTR);
-
-    if (*str == '\0') {
-        label->ic = ic;
-        return NOTHING;
-    }
-
-    int nxt = GetInd(str); // + assert
-
-    if (!label->nxt[nxt])
-        label->nxt[nxt] = (label_t*)calloc(1, sizeof(label_t));
-
-    return AddLabel(label->nxt[nxt], str + 1, ic);
-}
-
-int GetLabel(label_t* label, const char* str) {
-    my_assert(label, NULLPTR, -1);
-
-    if (*str == '\0')
-        return label->ic;
-
-    int nxt = GetInd(str); // + assert
-
-    if (label->nxt[nxt])
-        return GetLabel(label->nxt[nxt], str + 1);
-
-    return -1;
-}
-
 CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     my_assert(str, NULLPTR, NULLPTR);
     my_assert(assem, NULLPTR, NULLPTR);
@@ -133,7 +254,7 @@ CodeError_t ParseString(assembler_t* assem, const char* str, int pass_num) {
     int correct = sscanf(assem->buf, "%s%n", str, &read_symbols);
     my_assert(correct == 1, OPERATION_ERR, OPERATION_ERR);
 
-    if (pass_num == 1 && str[0] == ':')
+    if (pass_num == FirstPass && str[0] == ':')
         AddLabel(assem->label, str + 1, assem->ic);
 
     if (str[0] == ':')
@@ -157,176 +278,50 @@ CodeError_t PrintNumber(assembler_t* assem, const int value) {
     return NOTHING;
 }
 
-CodeError_t WriteToExFile(assembler_t* assem, const char* buf) {
-    my_assert(assem, NULLPTR, NULLPTR);
-    my_assert(buf, NULLPTR, NULLPTR);
+CodeError_t AddLabel(label_t* label, const char* str, const int ic) {
+    my_assert(label, NULLPTR, NULLPTR);
 
-    FILE* ex_file = fopen(assem->commands_file, "w");
-    my_assert(ex_file, FILE_ERR, FILE_ERR);
-
-    fwrite(buf, sizeof(char), assem->ex_ptr - buf, ex_file);
-    fclose(ex_file);
-}
-
-CodeError_t PassingCode(assembler_t* assem, int pass_num) {
-    char operation[MaxOperationSize] = {0};
-
-    CodeError_t error_code = NOTHING;
-    assem->ic = 0;
-    bool is_end = false;
-    int last_ic = 0;
-
-    assem->listing = fopen(assem->listing_file, "w");
-
-    fprintf(assem->listing, "IC    |  Operation         |  Code\n");
-    fprintf(assem->listing, "------------------------------------\n");
-
-    while (ZeroOper(operation) == NOTHING && ParseString(assem, operation, pass_num) == NOTHING) {
-        if (operation[0] == ':')
-            continue;
-        
-        fprintf(assem->listing, "%04d  |  %-5s  ", last_ic, operation);
-        
-        int operation_code = CalcOperHash(operation);
-        my_assert(operation_code != -1, VALUE_ERR, VALUE_ERR);
-        
-        size_t operation_counts = sizeof(operations) / sizeof(operation_t);
-        
-        StackElem_t value = 0;
-        char new_ic[100] = {0};
-        char reg_type[3] = {0};
-
-        bool known_oper = false;
-
-        for (size_t i = 0; i < operation_counts; ++i) {
-            if (operations[i].hash == operation_code) {
-
-                known_oper = true;
-
-                int oper_args = operations[i].args;
-
-                if (oper_args & Number) {
-                    error_code = ParseNumber(assem, &value);
-                    my_assert(error_code == NOTHING, error_code, error_code);
-                }
-
-                if (oper_args & Label) {
-                    error_code = ParseLabel(assem, new_ic);
-                    my_assert(error_code == NOTHING, error_code, error_code);
-                }
-
-                if (oper_args & Reg) {
-                    error_code = ParseString(assem, reg_type, pass_num);
-                    my_assert(error_code == NOTHING, error_code, error_code);
-                    CheckReg(reg_type);
-
-                    fprintf(assem->listing, "%-9s", reg_type);
-                }
-
-                if (oper_args & Mem) {
-                    error_code = ParseMem(assem, reg_type);
-                    my_assert(error_code == NOTHING, error_code, error_code);
-                    CheckReg(reg_type);
-                }
-
-                if (oper_args == 0)
-                    fprintf(assem->listing, "%*s", 9, "");
-
-                fprintf(assem->listing, "  |  ");
-
-                PrintNumber(assem, operations[i].code);
-
-                if (operation_code == 0) {
-                    is_end = true;
-                    break;
-                }
-
-                if (oper_args & Number)
-                    PrintNumber(assem, value);
-                
-                if (oper_args & Label)
-                    PrintNumber(assem, GetLabel(assem->label, new_ic));
-                
-                if (oper_args & Reg)
-                    PrintNumber(assem, reg_type[1] - 'A');
-                
-                if (oper_args & Mem)
-                    PrintNumber(assem, reg_type[1] - 'A');
-
-                break;
-            }
-        }
-
-        fprintf(assem->listing, "\n");
-        last_ic = assem->ic;
-
-        if (!known_oper) {
-            printerr("%d\n", operation_code);
-            printerr(RED_COLOR "Unknown operation\n" RESET_COLOR);
-            return OPERATION_ERR;
-        }
-
-        if (is_end)
-            break;
+    if (*str == '\0') {
+        label->ic = ic;
+        return NOTHING;
     }
 
-    fprintf(assem->listing, "------------------------------------\n");
+    int nxt = GetInd(str);
+    my_assert(nxt != -1, LABEL_ERR, LABEL_ERR);
 
-    if (pass_num == 2) my_assert(is_end, TERM_ERR, TERM_ERR);
+    if (!label->nxt[nxt])
+        label->nxt[nxt] = (label_t*)calloc(1, sizeof(label_t));
 
-    return NOTHING;
+    my_assert(label->nxt[nxt], CALLOC_ERR, CALLOC_ERR);
+
+    return AddLabel(label->nxt[nxt], str + 1, ic);
 }
 
-CodeError_t ZeroOper(char* operation) {
-    my_assert(operation, NULLPTR, NULLPTR);
+int GetLabel(label_t* label, const char* str) {
+    my_assert(label, NULLPTR, -1);
 
-    for (size_t i = 0 ; i < MaxOperationSize; ++i)
-        operation[i] = 0;
+    if (*str == '\0')
+        return label->ic;
 
-    return NOTHING;
+    int nxt = GetInd(str);
+    my_assert(nxt != -1, LABEL_ERR, LABEL_ERR);
+
+    if (label->nxt[nxt])
+        return GetLabel(label->nxt[nxt], str + 1);
+
+    return -1;
 }
 
-void CalcAllHashs() {
-    size_t operation_counts = sizeof(operations) / sizeof(operations[0]);
+int GetInd(const char* str) {
+    my_assert(str, NULLPTR, -1);
+    int ind = 0;
 
-    for (size_t i = 0; i < operation_counts; ++i) {
-        char dopa_popa[MaxOperationSize] = {0};
-        for (size_t j = 0; j < MaxOperationSize; ++j) {
-            if (operations[i].name[j] == '\0')
-                break;
+    if (isdigit(*str))
+        ind = 26 + (*str - '0');
+    else
+        ind = tolower(*str) - 'a';
 
-            dopa_popa[j] = operations[i].name[j];
-        }
-        printf("%5s: %3d\n", operations[i].name, CalcOperHash(dopa_popa));
-    }
-
-    printerr("\n");
+    return ind;
 }
 
-CodeError_t assembler(assembler_t* assem) {
-    my_assert(assem, NULLPTR, NULLPTR);
-
-    CodeError_t error_code = ReadCodeFile(assem);
-    my_assert(error_code == NOTHING, error_code, error_code);
-
-    assem->ex_ptr = (char*)calloc(assem->program->file_size, sizeof(char));
-    my_assert(assem->ex_ptr, NULLPTR, NULLPTR);
-
-    char operation[MaxOperationSize + 1] = {};
-
-    char* exec_file = assem->ex_ptr;
-
-    PassingCode(assem, 1);      // magic number
-
-    fclose(assem->listing);
-    assem->buf = assem->program->buf;
-    assem->ex_ptr = exec_file;
-
-    PassingCode(assem, 2);
-    
-    fclose(assem->listing);
-
-    WriteToExFile(assem, exec_file);
-
-    return error_code;
-}
+#undef CheckReg

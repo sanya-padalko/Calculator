@@ -7,10 +7,15 @@
 #include "calculator.h"
 #include "processor.h"
 
+const int NumberCnt = 10;
+const int AlphaCnt = 26;
+const int FirstPass = 1;
+const int SecondPass = 2;
+
 struct label_t {
     int ic = -1;
 
-    label_t* nxt[36] = {NULL};
+    label_t* nxt[AlphaCnt + NumberCnt] = {NULL};
 };
 
 struct assembler_t {
