@@ -1,6 +1,7 @@
 #include "stack.h"
 
 unsigned long calc_hash(stack_t *stack);
+int get_size(stack_t *stack);
 CodeError_t fill_poizon(stack_t *stack, int left, int right);
 static int StackRealloc(stack_t *stack, ssize_t new_size);
 
@@ -12,6 +13,12 @@ unsigned long calc_hash(stack_t *stack) {
         hash = (hash + (i + 1) * stack->data[i]) % mod;
     
     return hash;
+}
+
+int get_size(stack_t *stack) {
+    my_assert(stack, NULLPTR, -1);
+
+    return stack->size;
 }
 
 CodeError_t fill_poizon(stack_t *stack, int left, int right) {

@@ -49,6 +49,8 @@ const int NarrowMn =  3;
 const int BadSize  = -1;
 const int BaseStackSize = 1;
 
+int get_size(stack_t *stack);
+
 stack_t* StackCtor(ssize_t capacity ON_DEBUG(, VarInfo varinfo));
 
 CodeError_t StackDtor(stack_t *stack);
