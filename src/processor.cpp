@@ -14,6 +14,9 @@ CodeError_t execution(processor_t *proc) {
             return NOTHING;
         }
 
+        if (operation < 0 || operation >= OPER_COUNT)
+            return OPERATION_ERR;
+        
         error_code = operations[operation].func(proc);
         
         if (error_code != NOTHING) {

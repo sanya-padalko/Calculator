@@ -79,7 +79,9 @@ enum ProcOper {
     PUSHR , 
     POPR  ,
     
-    HLT
+    HLT   ,
+    
+    OPER_COUNT
 };
 
 processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
