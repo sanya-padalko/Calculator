@@ -11,9 +11,17 @@
 #include "processor.h"
 
 int main(int argc, char* argv[]) {
-    const char* start = argv[1];
+    const char* start = "../start.txt";
+    if (argc >= 2)
+        start = argv[1];
+
     const char* ex_file = "../ex_file.txt";
+    if (argc >= 3)
+        ex_file = argv[2];
+
     const char* list_file = "../listing.txt";
+    if (argc >= 4)
+        list_file = argv[3];
     
     assembler_t assem = {};
     assem.text_file = start;
