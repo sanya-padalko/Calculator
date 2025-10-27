@@ -183,6 +183,20 @@ void ProcDump(processor_t* proc, VarInfo varinfo) {
     printerr("\t}\n");
 }
 
+size_t StringHash(const char* str) {
+    my_assert(str, NULLPTR, 0);
+
+    size_t str_code = 0;
+    for (size_t c = 0; c < MaxOperationSize; c++) {
+        if (str[c] == '\0' || str[c] == '\n')
+            break;
+
+        str_code = ((str_code * 33) + str[c]) % 100000;
+    }
+
+    return str_code;
+}
+
 CodeError_t ProcStackPush(processor_t* proc) {
     CodeError_t code_error = ProcVerify(proc);
     my_assert(code_error == NOTHING, code_error, code_error);

@@ -39,7 +39,7 @@ struct processor_t {
 struct operation_t {
     const char* name;
 
-    int hash;
+    size_t hash;
 
     int code;
 
@@ -80,7 +80,7 @@ enum ProcOper {
     POPR  ,
     
     HLT   ,
-    
+
     OPER_COUNT
 };
 
@@ -88,6 +88,7 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo));
 CodeError_t ProcDtor(processor_t* proc);
 CodeError_t ProcVerify(processor_t* proc);
 void ProcDump(processor_t* proc, VarInfo varinfo);
+size_t StringHash(const char* str);
 
 CodeError_t ProcStackPush(processor_t* proc);
 CodeError_t ProcStackPop(processor_t* proc);
@@ -107,37 +108,37 @@ CodeError_t LoadFile(processor_t *proc);
 CodeError_t execution(processor_t *proc);
 
 const operation_t operations[] = {
-    {  .name = "PUSH"  ,  .hash =  88  ,  .code =  PUSH  ,  .func = ProcStackPush,  .args = 0 + Number  },
-    {  .name = "POP"   ,  .hash = 823  ,  .code =   POP  ,  .func =  ProcStackPop,  .args = 0           },
-    {  .name = "TOP"   ,  .hash = 507  ,  .code =   TOP  ,  .func =       ProcTop,  .args = 0           },
-    {  .name = "IN"    ,  .hash = 319  ,  .code =    IN  ,  .func =        ProcIn,  .args = 0           },
-    {  .name = "OUT"   ,  .hash = 880  ,  .code =   OUT  ,  .func =       ProcOut,  .args = 0           },
+    {  .name = "PUSH"  ,  .hash =  StringHash("PUSH")   ,  .code =  PUSH  ,  .func = ProcStackPush,  .args = 0 + Number  },
+    {  .name = "POP"   ,  .hash =  StringHash("POP")    ,  .code =   POP  ,  .func =  ProcStackPop,  .args = 0           },
+    {  .name = "TOP"   ,  .hash =  StringHash("TOP")    ,  .code =   TOP  ,  .func =       ProcTop,  .args = 0           },
+    {  .name = "IN"    ,  .hash =  StringHash("IN")     ,  .code =    IN  ,  .func =        ProcIn,  .args = 0           },
+    {  .name = "OUT"   ,  .hash =  StringHash("OUT")    ,  .code =   OUT  ,  .func =       ProcOut,  .args = 0           },
 
-    {  .name = "ADD"   ,  .hash = 633  ,  .code =   ADD  ,  .func =       ProcAdd,  .args = 0           },
-    {  .name = "SUB"   ,  .hash = 962  ,  .code =   SUB  ,  .func =       ProcSub,  .args = 0           },
-    {  .name = "MUL"   ,  .hash = 326  ,  .code =   MUL  ,  .func =       ProcMul,  .args = 0           },
-    {  .name = "DIV"   ,  .hash = 683  ,  .code =   DIV  ,  .func =       ProcDiv,  .args = 0           },
-    {  .name = "SQRT"  ,  .hash = 410  ,  .code =  SQRT  ,  .func =      ProcSqrt,  .args = 0           },
-    {  .name = "POW"   ,  .hash = 446  ,  .code =   POW  ,  .func =       ProcPow,  .args = 0           },
+    {  .name = "ADD"   ,  .hash =  StringHash("ADD")    ,  .code =   ADD  ,  .func =       ProcAdd,  .args = 0           },
+    {  .name = "SUB"   ,  .hash =  StringHash("SUB")    ,  .code =   SUB  ,  .func =       ProcSub,  .args = 0           },
+    {  .name = "MUL"   ,  .hash =  StringHash("MUL")    ,  .code =   MUL  ,  .func =       ProcMul,  .args = 0           },
+    {  .name = "DIV"   ,  .hash =  StringHash("DIV")    ,  .code =   DIV  ,  .func =       ProcDiv,  .args = 0           },
+    {  .name = "SQRT"  ,  .hash =  StringHash("SQRT")   ,  .code =  SQRT  ,  .func =      ProcSqrt,  .args = 0           },
+    {  .name = "POW"   ,  .hash =  StringHash("POW")    ,  .code =   POW  ,  .func =       ProcPow,  .args = 0           },
 
-    {  .name = "JMP"   ,  .hash = 423  ,  .code =   JMP  ,  .func =       ProcJmp,  .args = 0 + Label   },
-    {  .name = "JB"    ,  .hash = 996  ,  .code =    JB  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "JBE"   ,  .hash = 137  ,  .code =   JBE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "JA"    ,  .hash =  59  ,  .code =    JA  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "JAE"   ,  .hash = 200  ,  .code =   JAE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "JE"    ,  .hash = 807  ,  .code =    JE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "JNE"   ,  .hash = 381  ,  .code =   JNE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
-    {  .name = "CALL"  ,  .hash = 884  ,  .code =  CALL  ,  .func =      ProcCall,  .args = 0 + Label   },
-    {  .name = "RET"   ,  .hash = 651  ,  .code =   RET  ,  .func =       ProcRet,  .args = 0           },
+    {  .name = "JMP"   ,  .hash =  StringHash("JMP")    ,  .code =   JMP  ,  .func =       ProcJmp,  .args = 0 + Label   },
+    {  .name = "JB"    ,  .hash =  StringHash("JB")     ,  .code =    JB  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JBE"   ,  .hash =  StringHash("JBE")    ,  .code =   JBE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JA"    ,  .hash =  StringHash("JA")     ,  .code =    JA  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JAE"   ,  .hash =  StringHash("JAE")    ,  .code =   JAE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JE"    ,  .hash =  StringHash("JE")     ,  .code =    JE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "JNE"   ,  .hash =  StringHash("JNE")    ,  .code =   JNE  ,  .func =   ProcCmpJump,  .args = 0 + Label   },
+    {  .name = "CALL"  ,  .hash =  StringHash("CALL")   ,  .code =  CALL  ,  .func =      ProcCall,  .args = 0 + Label   },
+    {  .name = "RET"   ,  .hash =  StringHash("RET")    ,  .code =   RET  ,  .func =       ProcRet,  .args = 0           },
 
-    {  .name = "PUSHM" ,  .hash = 165  ,  .code = PUSHM  ,  .func =   ProcPushRam,  .args = 0 + Mem     },
-    {  .name = "POPM"  ,  .hash = 364  ,  .code =  POPM  ,  .func =    ProcPopRam,  .args = 0 + Mem     },
-    {  .name = "DRAW"  ,  .hash = 118  ,  .code =  DRAW  ,  .func =      ProcDraw,  .args = 0           },
+    {  .name = "PUSHM" ,  .hash =  StringHash("PUSHM")  ,  .code = PUSHM  ,  .func =   ProcPushRam,  .args = 0 + Mem     },
+    {  .name = "POPM"  ,  .hash =  StringHash("POPM")   ,  .code =  POPM  ,  .func =    ProcPopRam,  .args = 0 + Mem     },
+    {  .name = "DRAW"  ,  .hash =  StringHash("DRAW")   ,  .code =  DRAW  ,  .func =      ProcDraw,  .args = 0           },
 
-    {  .name = "PUSHR" ,  .hash = 170  ,  .code = PUSHR  ,  .func =   ProcPushReg,  .args = 0 + Reg     },
-    {  .name = "POPR"  ,  .hash = 529  ,  .code =  POPR  ,  .func =    ProcPopReg,  .args = 0 + Reg     },
+    {  .name = "PUSHR" ,  .hash =  StringHash("PUSHR")  ,  .code = PUSHR  ,  .func =   ProcPushReg,  .args = 0 + Reg     },
+    {  .name = "POPR"  ,  .hash =  StringHash("POPR")   ,  .code =  POPR  ,  .func =    ProcPopReg,  .args = 0 + Reg     },
 
-    {  .name = "HLT"   ,  .hash =   0  ,  .code =   HLT  ,  .func = ProcStackPush,  .args = 0           }
+    {  .name = "HLT"   ,  .hash =  StringHash("HLT")    ,  .code =   HLT  ,  .func = ProcStackPush,  .args = 0           }
 };
 
 #endif
