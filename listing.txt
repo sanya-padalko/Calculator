@@ -1,22 +1,22 @@
 IC    |  Operation         |  Code
 ------------------------------------
-0000  |  JMP    :main      |  20  24  
-0002  |  PUSHR  RAX        |  40  0   
-0004  |  PUSH   1          |  1   1   
-0006  |  JA     :push      |  23  11  
-0008  |  PUSH   1          |  1   1   
-0010  |  RET               |  28  
-0011  |  PUSHR  RAX        |  40  0   
-0013  |  PUSHR  RAX        |  40  0   
-0015  |  PUSH   1          |  1   1   
-0017  |  SUB               |  11  
-0018  |  POPR   RAX        |  41  0   
-0020  |  CALL   :factorial  |  27  2   
-0022  |  MUL               |  12  
-0023  |  RET               |  28  
-0024  |  IN                |  4   
-0025  |  POPR   RAX        |  41  0   
-0027  |  CALL   :factorial  |  27  2   
-0029  |  OUT               |  5   
-0030  |  HLT               |  50  
+0000  |  JMP    :main      |  b   18  
+0002  |  PUSHR  RAX        |  17  0   
+0004  |  PUSH   1          |  0   1   
+0006  |  JA     :push      |  e   b   
+0008  |  PUSH   1          |  0   1   
+000a  |  RET               |  13  
+000b  |  PUSHR  RAX        |  17  0   
+000d  |  PUSHR  RAX        |  17  0   
+000f  |  PUSH   1          |  0   1   
+0011  |  SUB               |  6   
+0012  |  POPR   RAX        |  18  0   
+0014  |  CALL   :fact      |  12  2   
+0016  |  MUL               |  7   
+0017  |  RET               |  13  
+0018  |  IN                |  3   
+0019  |  POPR   RAX        |  18  0   
+001b  |  CALL   :fact      |  12  2   
+001d  |  OUT               |  4   
+001e  |  HLT    
 ------------------------------------
