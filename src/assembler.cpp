@@ -156,6 +156,8 @@ CodeError_t WriteToExFile(assembler_t* assem, const char* buf) {
 
     fwrite(buf, sizeof(char), assem->ex_ptr - buf, ex_file);
     fclose(ex_file);
+
+    return NOTHING;
 }
 
 CodeError_t ZeroOper(char* operation) {
@@ -175,7 +177,7 @@ CodeError_t ParseOper(assembler_t* assem, const operation_t* operation, int pass
     CodeError_t error_code = NOTHING;
     StackElem_t value = 0;
     char new_ic[100] = {0};
-    char reg_type[3] = {0};
+    char reg_type[5] = {0};
 
     if (oper_args & Number)
         error_code = ParseNumber(assem, &value);
@@ -194,6 +196,7 @@ CodeError_t ParseOper(assembler_t* assem, const operation_t* operation, int pass
     if (oper_args & Mem) {
         error_code = ParseMem(assem, reg_type);
         my_assert(error_code == NOTHING, error_code, error_code);
+        reg_type[3] = '\0';
         if (!CheckReg(reg_type)) return HASH_ERR;
     }
 
@@ -259,7 +262,7 @@ CodeError_t ParseMem(assembler_t* assem, const char* reg) {
     assem->buf += read_symbols;
     ++assem->ic;
 
-    fprintf(assem->listing, "[%-7s", reg);
+    fprintf(assem->listing, "[%-8s", reg);
 
     return NOTHING;
 }

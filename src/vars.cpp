@@ -13,4 +13,5 @@ VarInfo VarInfoCtor(const char* object_name, const char* file_name, const char* 
 
 CodeError_t PrintVarInfo(const VarInfo varinfo) {
     printf("\"%s\" %s, %s: %d\n", varinfo.object_name, varinfo.file_name, varinfo.func_name, varinfo.line_ind);
+    return NOTHING;
 }

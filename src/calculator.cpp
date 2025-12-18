@@ -162,7 +162,7 @@ CodeError_t ProcOut(processor_t *proc) {
         return VALUE_ERR;
     }
 
-    printf("Result: %d\n", a);
+    printf("%d\n", a);
 
     return NOTHING;
 }

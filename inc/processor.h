@@ -19,7 +19,7 @@
 
 const size_t RegsCount = 8;
 const size_t RamSize = 40000;
-const int MaxOperationSize = 5;
+const int MaxOperationSize = 20;
 
 struct processor_t {
     stack_t *stack = NULL;

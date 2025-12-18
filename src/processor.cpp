@@ -81,6 +81,8 @@ processor_t* ProcCtor(const char* code_file ON_DEBUG(, VarInfo varinfo)) {
 
     proc->cmd_cnt = 0;
     proc->ic = 0;
+
+    return proc;
 }
 
 CodeError_t ProcDtor(processor_t* proc) {
